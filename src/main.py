@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.function as F
 import torch.optim as optim
 from torch.autograd import Variable
+import matplotlib as plt
 
 # hyperparameters
 D_steps = 200
@@ -44,24 +45,39 @@ class Trainer():
         self.G = G()
         self.D_optimiser = optim.Adam(D.parameters(), lr = lr)
         self.G_optimiser = optim.Adam(G.parameters(), lr = lr)
-
+        self.predictions = []
 
     def train(self):
         for i in range(0, epoch):
             for k in range(0, D_steps):
-                D.zero_grad()
+                for batch_id in range(int((train_size - 1) / minibatch_size) + 1):
+                    
+                    D.zero_grad()
 
-                size, data_batch = create_data_batch()
+                    size, data_batch = create_data_batch()
+                    z = create_noise_batch()
+                    generated_batch = G(Variable(z)).detach()
+
+                    loss_d_r = self.D.loss(D(Variable(data_batch)), Variable(torch.ones(1)))
+                    loss_d_r.backward()
+
+                    loss_d_f = self.D.loss(1 - D(generated_batch), Variable(torch.ones(1)))
+                    loss_d_f.backward()
+
+                    self.D_optimiser.step()
+            
+            for k in range(0, G_steps):
                 z = create_noise_batch()
-                noise_batch = G(Variable(z))
+                generated_batch = self.G(Variable(z))
 
-                loss_d_r = self.D.loss(D(Variable(data_batch)))
-                loss_d_r.backward()
+                D_prediction = self.D(generated_batch)
+                loss_G = self.G.loss(D_prediction, Variable(torch.ones(1)))
+                loss_G.backward()
 
-                loss_d_f = self.D.loss(1 - D(noise_batch))
-                loss_d_f.backward()
-                self.D_optimiser.step()
-                pass
+                predictions.append(D_prediction.mean())
+
+                self.G_optimiser().step()
+
 
     def create_noise_batch(self):
         G_in = np.random.normal(0.0, 1.0, [minibatch_size, G_inputs])
@@ -85,3 +101,5 @@ class Trainer():
 
 T = Trainer()
 t.train()
+
+plt.plot(predictions)
