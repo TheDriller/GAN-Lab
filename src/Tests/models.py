@@ -62,21 +62,24 @@ class G_conv(nn.Module):
     def __init__(self):
         super(G_conv, self).__init__()
         self.loss = nn.BCELoss
-        self.conv1 = nn.ConvTranspose2d(G_inputs, 28 * 16, 3, padding=1)
-        self.bn1 = nn.BatchNorm2d(28 * 16)
+        self.conv1 = nn.ConvTranspose2d(G_inputs, 16, 5, padding=1, stride=1)
+        self.bn1 = nn.BatchNorm2d(16)
         self.layer1 = nn.Sequential(self.conv1, self.bn1)
-        self.conv2 = nn.ConvTranspose2d(28 * 16, 28 * 8, 3, padding=1)
-        self.bn2 = nn.BatchNorm2d(28 * 8)
+        self.conv2 = nn.ConvTranspose2d(16, 8, 5, padding=1, stride=2)
+        self.bn2 = nn.BatchNorm2d(8)
         self.layer2 = nn.Sequential(self.conv2, self.bn2)
-        self.conv3 = nn.ConvTranspose2d(28 * 8, 28 * 4, 3, padding=1)
-        self.bn3 = nn.BatchNorm2d(28 * 4)
+        self.conv3 = nn.ConvTranspose2d(8, 4, 4, padding=1, stride=2)
+        self.bn3 = nn.BatchNorm2d(4)
         self.layer3 = nn.Sequential(self.conv3, self.bn3)
-        self.deconv4 = nn.ConvTranspose2d(28 * 4, 1, 3, padding=1)
+        self.deconv4 = nn.ConvTranspose2d(4, 1, 4, padding=1, stride=2)
 
     def forward(self, x):
         out = F.relu(self.layer1(x))
+        #print(out.size())
         out = F.relu(self.layer2(out))
+        #print(out.size())
         out = F.relu(self.layer3(out))
+        #print(out.size())
         out = F.tanh(self.deconv4(out))
-        print(out.size())
+        #print(out.size())
         return out

@@ -28,7 +28,7 @@ class Trainer():
         self.D = D_conv()
         if cuda:
             self.D.cuda()
-        self.G = G()
+        self.G = G_conv()
         if cuda:
             self.G.cuda()
 
@@ -52,7 +52,7 @@ class Trainer():
                     self.D.zero_grad()
 
 #                    size, data_batch = self.create_data_batch()
-                    z = Variable(self.create_noise_batch())#.view(-1, G_inputs, 1, 1)
+                    z = Variable(self.create_noise_batch()).view(-1, G_inputs, 1, 1)
 
                     if cuda:
                         z = z.cuda()
@@ -78,7 +78,7 @@ class Trainer():
                 index_list = np.arange(0, train_size)
 
             for k in range(0, G_steps):
-                z = Variable(self.create_noise_batch())#.view(-1, G_inputs, 1, 1))
+                z = Variable(self.create_noise_batch()).view(-1, G_inputs, 1, 1)
                 if cuda:
                     z = z.cuda()
                 generated_batch = self.G(z)
