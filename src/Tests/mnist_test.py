@@ -6,22 +6,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
+from models import *
+from hyperparameters import *
 
 import torchvision.datasets as dset
 import torchvision.transforms as transforms
 
 cuda = torch.cuda.is_available()
-
-# hyperparameters
-D_steps = 3
-epoch = 10
-G_steps = 1
-G_inputs = 100 # ???
-image_x = 28
-image_y = 28
-minibatch_size = 100
-train_size = 1 # ???
-lr = 0.001
 
 #global variable
 index_list = np.arange(0, train_size)
@@ -29,39 +20,10 @@ index_list = np.arange(0, train_size)
 #estimation
 predictions = []
 
-#networks
-class D(nn.Module):
-    def __init__(self):
-        super(D, self).__init__()
-        self.loss = nn.BCELoss()
-        self.fc1 = nn.Linear(image_x * image_y, 512)
-        self.fc2 = nn.Linear(512, 512)
-        self.fc3 = nn.Linear(512, 1)
-
-    def forward(self, x):
-        x = x.view(-1, 28*28)
-        out = F.relu(self.fc1(x))
-        out = F.relu(self.fc2(out))
-        out = F.sigmoid(self.fc3(out))
-        return out
-
-class G(nn.Module):
-    def __init__(self):
-        super(G, self).__init__()
-        self.loss = nn.BCELoss()
-        self.fc1 = nn.Linear(G_inputs, 256)
-        self.fc2 = nn.Linear(256, 512)
-        self.fc3 = nn.Linear(512, image_y * image_x)
-
-    def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.sigmoid(self.fc3(x))
-        return x
-
+#Training
 class Trainer():
     def __init__(self):
-        self.D = D()
+        self.D = D_conv()
         if cuda:
             self.D.cuda()
         self.G = G()
@@ -79,26 +41,27 @@ class Trainer():
                 print("Epoch: " + str(i) + ", D step: " + str(k))
 #                for batch_id in range(int((train_size - 1) / minibatch_size) + 1):
                 for batch_idx, (x, target) in enumerate(train_loader):
-                    print(batch_idx)
+                    #print(batch_idx)
                     self.D.zero_grad()
 
 #                    size, data_batch = self.create_data_batch()
-                    z = Variable(self.create_noise_batch())
+                    z = Variable(self.create_noise_batch())#.view(-1, G_inputs, 1, 1)
+
                     if cuda:
                         z = z.cuda()
                     generated_batch = self.G(z).detach()
                     x = Variable(x)
                     if cuda:
                         x = x.cuda()
-                    real_prediction = self.D(x)[0] # 1x1
+                    real_prediction = self.D(x).squeeze() # 1x1
 
-                    y_ones = Variable(torch.ones(1))
+                    y_ones = Variable(torch.ones(minibatch_size))
                     if cuda:
                         y_ones = y_ones.cuda()
                     loss_d_r = self.D.loss(real_prediction, y_ones)
                     loss_d_r.backward()
 
-                    generated_prediction = self.D(generated_batch)[0] # 1x1
+                    generated_prediction = self.D(generated_batch.view(minibatch_size, 1, 28, 28)).squeeze() # 1x1
                     loss_d_f = self.D.loss(1 - generated_prediction, y_ones)
                     loss_d_f.backward()
 
@@ -106,12 +69,12 @@ class Trainer():
                 index_list = np.arange(0, train_size)
 
             for k in range(0, G_steps):
-                z = Variable(self.create_noise_batch())
+                z = Variable(self.create_noise_batch())#.view(-1, G_inputs, 1, 1))
                 if cuda:
                     z = z.cuda()
                 generated_batch = self.G(z)
 
-                y_ones = Variable(torch.ones(1))
+                y_ones = Variable(torch.ones(minibatch_size))
                 if cuda:
                     y_ones = y_ones.cuda()
 
