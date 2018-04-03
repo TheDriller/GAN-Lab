@@ -1,6 +1,6 @@
 # hyperparameters
 D_steps = 5
-epoch = 30
+epoch = 10
 G_steps = 5
 G_inputs = 100 # ???
 image_x = 28

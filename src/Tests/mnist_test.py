@@ -83,24 +83,25 @@ class Trainer():
 
                     self.D_optimiser.step()
 
-            d_loss.append(np.mean(temp))
-            temp = []
+                d_loss.append(np.mean(temp))
+                temp = []
 
-            for k in range(0, G_steps):
-                z = Variable(self.create_noise_batch(current_batch_size)).view(-1, G_inputs, 1, 1)
-                if cuda:
-                    z = z.cuda()
-                generated_batch = self.G(z)
+                for k in range(0, G_steps):
+                    z = Variable(self.create_noise_batch(current_batch_size)).view(-1, G_inputs, 1, 1)
+                    if cuda:
+                        z = z.cuda()
+                    generated_batch = self.G(z)
 
-                D_prediction = self.D(generated_batch.view(current_batch_size, 1, 28, 28)).squeeze() # 1x1
-                loss_G = self.G.loss(D_prediction, y_almost_ones)
-                temp.append(loss_G.data)
-                loss_G.backward()
+                    D_prediction = self.D(generated_batch.view(current_batch_size, 1, 28, 28)).squeeze() # 1x1
+                    loss_G = self.G.loss(D_prediction, y_almost_ones)
+                    temp.append(loss_G.data)
+                    loss_G.backward()
 
-                predictions.append(D_prediction.mean().data)
+                    predictions.append(D_prediction.mean().data)
 
-                self.G_optimiser.step()
-            g_loss.append(np.mean(temp))
+                    self.G_optimiser.step()
+                    
+                g_loss.append(np.mean(temp))
 
     def create_noise_batch(self, batch_size):
         G_in = np.random.normal(0.0, 1.0, [batch_size, G_inputs])
