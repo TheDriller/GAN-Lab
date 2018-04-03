@@ -43,7 +43,7 @@ class Trainer():
             temp = []
 
             for batch_idx, (x, target) in enumerate(train_loader):
-                if batch_idx > 10:
+                if batch_idx > 20:
                     break
 
                 x = Variable(x)

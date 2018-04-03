@@ -1,7 +1,7 @@
 # hyperparameters
-D_steps = 10
-epoch = 20
-G_steps = 10
+D_steps = 5
+epoch = 30
+G_steps = 5
 G_inputs = 100 # ???
 image_x = 28
 image_y = 28
@@ -13,3 +13,4 @@ beta1 = 0.5
 beta2 = 0.999
 mean = 0.0
 std = 0.02
+model_complexity = 4
