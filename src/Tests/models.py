@@ -61,7 +61,7 @@ class D_conv(nn.Module):
 class G_conv(nn.Module):
     def __init__(self):
         super(G_conv, self).__init__()
-        self.loss = nn.BCELoss
+        self.loss = nn.BCELoss()
         self.conv1 = nn.ConvTranspose2d(G_inputs, 16, 5, padding=1, stride=1)
         self.bn1 = nn.BatchNorm2d(16)
         self.layer1 = nn.Sequential(self.conv1, self.bn1)

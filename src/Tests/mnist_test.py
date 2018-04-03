@@ -39,9 +39,9 @@ class Trainer():
     def train(self, train_loader):
         global index_list
         for i in range(0, epoch):
+            temp = []
             for k in range(0, D_steps):
                 print("Epoch: " + str(i) + ", D step: " + str(k))
-                temp = []
 #                for batch_id in range(int((train_size - 1) / minibatch_size) + 1):
 
 
@@ -74,9 +74,9 @@ class Trainer():
                     loss_d_f.backward()
 
                     self.D_optimiser.step()
-                d_loss.append(np.mean(temp))
                 index_list = np.arange(0, train_size)
-
+            d_loss.append(np.mean(temp))
+            temp = []
             for k in range(0, G_steps):
                 z = Variable(self.create_noise_batch()).view(-1, G_inputs, 1, 1)
                 if cuda:
@@ -89,12 +89,13 @@ class Trainer():
 
                 D_prediction = self.D(generated_batch.view(minibatch_size, 1, 28, 28)).squeeze() # 1x1
                 loss_G = self.G.loss(D_prediction, y_ones)
-                g_loss.append(loss_G.data)
+                temp.append(loss_G.data)
                 loss_G.backward()
 
                 predictions.append(D_prediction.mean().data)
 
                 self.G_optimiser.step()
+            g_loss.append(np.mean(temp))
 
     def create_noise_batch(self):
         G_in = np.random.normal(0.0, 1.0, [minibatch_size, G_inputs])
@@ -123,4 +124,3 @@ plt.plot(g_loss, label="g_loss")
 plt.legend(loc="best")
 plt.savefig("loss.png")
 plt.show()
-
