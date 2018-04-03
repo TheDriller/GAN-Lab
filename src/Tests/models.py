@@ -48,9 +48,10 @@ class D_conv(nn.Module):
         self.bn3 = nn.BatchNorm2d(16)
         self.layer3 = nn.Sequential(self.conv3, self.bn3)
         self.fully = nn.Linear(16*image_x * image_y, 1)
+        self.weights_init(mean, std)
 
     def weights_init(self, mean, std):
-        weights_init_general(self._modules, mean, std)
+        weights_init_general(self, mean, std)
 
     def forward(self, x):
         out = F.leaky_relu(self.layer1(x), leak)
@@ -74,9 +75,10 @@ class G_conv(nn.Module):
         self.bn3 = nn.BatchNorm2d(4)
         self.layer3 = nn.Sequential(self.conv3, self.bn3)
         self.deconv4 = nn.ConvTranspose2d(4, 1, 4, padding=1, stride=2)
+        self.weights_init(mean, std)
 
     def weights_init(self, mean, std):
-        weights_init_general(self._modules, mean, std)
+        weights_init_general(self, mean, std)
 
     def forward(self, x):
         out = F.relu(self.layer1(x))
@@ -85,7 +87,8 @@ class G_conv(nn.Module):
         out = F.tanh(self.deconv4(out))
         return out
 
-def weights_init_general(modules, mean, std):
-    for m in modules:
-        m.weight.data.normal_(mean, std)
-        m.bias.data.zeros_()
+def weights_init_general(model, mean, std):
+    for m in model._modules:
+        if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):
+            model._modules[m].weight.data.normal_(mean, std)
+            model._modules[m].bias.data.zero_()
