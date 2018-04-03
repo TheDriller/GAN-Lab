@@ -52,11 +52,11 @@ class Trainer():
 
                 current_batch_size = x.shape[0]
 
-                y_almost_ones = Variable(torch.from_numpy(np.random.normal(0.8, 1.0, current_batch_size)).type(torch.FloatTensor))
+                y_almost_ones = Variable(torch.from_numpy(np.random.uniform(0.8, 1.0, current_batch_size)).type(torch.FloatTensor))
                 if cuda:
                     y_almost_ones = y_almost_ones.cuda()
 
-                y_almost_zeros = Variable(torch.from_numpy(np.random.normal(0.0, 0.2, current_batch_size)).type(torch.FloatTensor))
+                y_almost_zeros = Variable(torch.from_numpy(np.random.uniform(0.0, 0.2, current_batch_size)).type(torch.FloatTensor))
                 if cuda:
                     y_almost_zeros = y_almost_zeros.cuda()
 
@@ -100,7 +100,7 @@ class Trainer():
                     predictions.append(D_prediction.mean().data)
 
                     self.G_optimiser.step()
-                    
+
                 g_loss.append(np.mean(temp))
 
     def create_noise_batch(self, batch_size):
@@ -121,12 +121,12 @@ T.train(train_loader)
 torch.save(T.G.state_dict(), "g_saved.pt")
 torch.save(T.D.state_dict(), "d_saved.pt")
 
-plt.plot(predictions, label="test")
-plt.savefig("predictions.png")
-plt.show()
-
-plt.plot(d_loss, label="d_loss")
-plt.plot(g_loss, label="g_loss")
-plt.legend(loc="best")
-plt.savefig("loss.png")
-plt.show()
+# plt.plot(predictions, label="test")
+# plt.savefig("predictions.png")
+# plt.show()
+#
+# plt.plot(d_loss, label="d_loss")
+# plt.plot(g_loss, label="g_loss")
+# plt.legend(loc="best")
+# plt.savefig("loss.png")
+# plt.show()
