@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.image as image
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,6 +9,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 from models import *
 from hyperparameters import *
+import os
 
 import torchvision.datasets as dset
 import torchvision.transforms as transforms
@@ -21,6 +23,7 @@ index_list = np.arange(0, train_size)
 predictions = []
 g_loss = []
 d_loss = []
+
 
 #Training
 class Trainer():
@@ -38,6 +41,8 @@ class Trainer():
 
     def train(self, train_loader):
         global index_list
+        z_saved = Variable(self.create_noise_batch(1).view(1, G_inputs, 1, 1))
+
         for i in range(0, epoch):
             print("Epoch: " + str(i))
             temp = []
@@ -102,6 +107,11 @@ class Trainer():
                     self.G_optimiser.step()
 
                 g_loss.append(np.mean(temp))
+            image_temp = self.G.forward(z_saved).view(1, image_x, image_y)
+            os.makedirs("epoch_images", exist_ok = True)
+            image.imsave("epoch_images/" + str(i) + ".png", image_temp[0].data)
+
+
 
     def create_noise_batch(self, batch_size):
         G_in = np.random.normal(0.0, 1.0, [batch_size, G_inputs])

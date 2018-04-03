@@ -25,7 +25,7 @@ generator.eval()
 noise_batch = create_noise_batch()
 
 res = generator(Variable(noise_batch.view(nb_generate, G_inputs, 1, 1)))
-res = res.view(nb_generate, 28, 28)
+res = res.view(nb_generate, image_x, image_y)
 
 for i in range(0, nb_generate):
     image.imsave("image_res/" + str(i) + ".png", res[i].data)
