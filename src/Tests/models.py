@@ -49,11 +49,13 @@ class D_conv(nn.Module):
         self.layer3 = nn.Sequential(self.conv3, self.bn3)
         self.fully = nn.Linear(16*image_x * image_y, 1)
 
+    def weights_init(self, mean, std):
+        weights_init_general(self._modules, mean, std)
+
     def forward(self, x):
-        out = F.relu(self.layer1(x))
-        out = F.relu(self.layer2(out))
-        out = F.relu(self.layer3(out))
-        #print(out.size(0))
+        out = F.leaky_relu(self.layer1(x), leak)
+        out = F.leaky_relu(self.layer2(out), leak)
+        out = F.leaky_relu(self.layer3(out), leak)
         out = out.view(out.size(0), -1)
         out = F.sigmoid(self.fully(out))
         return out
@@ -73,13 +75,17 @@ class G_conv(nn.Module):
         self.layer3 = nn.Sequential(self.conv3, self.bn3)
         self.deconv4 = nn.ConvTranspose2d(4, 1, 4, padding=1, stride=2)
 
+    def weights_init(self, mean, std):
+        weights_init_general(self._modules, mean, std)
+
     def forward(self, x):
         out = F.relu(self.layer1(x))
-        #print(out.size())
         out = F.relu(self.layer2(out))
-        #print(out.size())
         out = F.relu(self.layer3(out))
-        #print(out.size())
         out = F.tanh(self.deconv4(out))
-        #print(out.size())
         return out
+
+def weights_init_general(modules, mean, std):
+    for m in modules:
+        m.weight.data.normal_(mean, std)
+        m.bias.data.zeros_()

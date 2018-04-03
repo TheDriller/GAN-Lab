@@ -32,63 +32,68 @@ class Trainer():
         if cuda:
             self.G.cuda()
 
-        self.D_optimiser = optim.Adam(self.D.parameters(), lr = lr)
-        self.G_optimiser = optim.Adam(self.G.parameters(), lr = lr)
+        self.D_optimiser = optim.Adam(self.D.parameters(), lr = lr, betas = (beta1, beta2))
+        self.G_optimiser = optim.Adam(self.G.parameters(), lr = lr, betas = (beta1, beta2))
         self.predictions = []
 
     def train(self, train_loader):
         global index_list
         for i in range(0, epoch):
+            print("Epoch: " + str(i))
             temp = []
-            for k in range(0, D_steps):
-                print("Epoch: " + str(i) + ", D step: " + str(k))
-#                for batch_id in range(int((train_size - 1) / minibatch_size) + 1):
 
+            for batch_idx, (x, target) in enumerate(train_loader):
+                if batch_idx > 10:
+                    break
 
-                for batch_idx, (x, target) in enumerate(train_loader):
-                    if(batch_idx > 10):
-                        break
-                    #print(batch_idx)
+                x = Variable(x)
+                if cuda:
+                    x = x.cuda()
+
+                current_batch_size = x.shape[0]
+
+                y_almost_ones = Variable(torch.from_numpy(np.random.normal(0.8, 1.0, current_batch_size)).type(torch.FloatTensor))
+                if cuda:
+                    y_almost_ones = y_almost_ones.cuda()
+
+                y_almost_zeros = Variable(torch.from_numpy(np.random.normal(0.0, 0.2, current_batch_size)).type(torch.FloatTensor))
+                if cuda:
+                    y_almost_zeros = y_almost_zeros.cuda()
+
+                for k in range(0, D_steps):
                     self.D.zero_grad()
 
 #                    size, data_batch = self.create_data_batch()
-                    z = Variable(self.create_noise_batch()).view(-1, G_inputs, 1, 1)
+                    z = Variable(self.create_noise_batch(current_batch_size)).view(-1, G_inputs, 1, 1)
 
                     if cuda:
                         z = z.cuda()
                     generated_batch = self.G(z).detach()
-                    x = Variable(x)
-                    if cuda:
-                        x = x.cuda()
+
                     real_prediction = self.D(x).squeeze() # 1x1
 
-                    y_ones = Variable(torch.ones(minibatch_size))
-                    if cuda:
-                        y_ones = y_ones.cuda()
-                    loss_d_r = self.D.loss(real_prediction, y_ones)
+                    loss_d_r = self.D.loss(real_prediction, y_almost_ones)
                     loss_d_r.backward()
 
-                    generated_prediction = self.D(generated_batch.view(minibatch_size, 1, 28, 28)).squeeze() # 1x1
-                    loss_d_f = self.D.loss(1 - generated_prediction, y_ones)
+                    generated_prediction = self.D(generated_batch.view(current_batch_size, 1, 28, 28)).squeeze() # 1x1
+                    loss_d_f = self.D.loss(generated_prediction, y_almost_zeros)
+
                     temp.append(loss_d_r.data + loss_d_f.data)
                     loss_d_f.backward()
 
                     self.D_optimiser.step()
-                index_list = np.arange(0, train_size)
+
             d_loss.append(np.mean(temp))
             temp = []
+
             for k in range(0, G_steps):
-                z = Variable(self.create_noise_batch()).view(-1, G_inputs, 1, 1)
+                z = Variable(self.create_noise_batch(current_batch_size)).view(-1, G_inputs, 1, 1)
                 if cuda:
                     z = z.cuda()
                 generated_batch = self.G(z)
 
-                y_ones = Variable(torch.ones(minibatch_size))
-                if cuda:
-                    y_ones = y_ones.cuda()
-
-                D_prediction = self.D(generated_batch.view(minibatch_size, 1, 28, 28)).squeeze() # 1x1
-                loss_G = self.G.loss(D_prediction, y_ones)
+                D_prediction = self.D(generated_batch.view(current_batch_size, 1, 28, 28)).squeeze() # 1x1
+                loss_G = self.G.loss(D_prediction, y_almost_ones)
                 temp.append(loss_G.data)
                 loss_G.backward()
 
@@ -97,12 +102,12 @@ class Trainer():
                 self.G_optimiser.step()
             g_loss.append(np.mean(temp))
 
-    def create_noise_batch(self):
-        G_in = np.random.normal(0.0, 1.0, [minibatch_size, G_inputs])
+    def create_noise_batch(self, batch_size):
+        G_in = np.random.normal(0.0, 1.0, [batch_size, G_inputs])
         return torch.from_numpy(G_in).type(torch.FloatTensor)
 
 root = './dataMnist'
-trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (1.0,))])
+trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
 train_set = dset.MNIST(root=root, train=True, transform=trans, download=True)
 train_loader = torch.utils.data.DataLoader(
                  dataset=train_set,
