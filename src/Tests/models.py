@@ -92,3 +92,54 @@ def weights_init_general(model, mean, std):
         if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):
             model._modules[m].weight.data.normal_(mean, std)
             model._modules[m].bias.data.zero_()
+
+class basic_rnn(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(basic_rnn, self).__init__()
+
+        self.hidden_size = hidden_size
+
+        self.i2h = nn.Linear(input_size + hidden_size, hidden_size)
+        self.i2o = nn.Linear(input_size + hidden_size, output_size)
+        self.softmax = nn.LogSoftmax(dim=1)
+
+    def forward(self, input, hidden):
+        combined = torch.cat((input, hidden), 1)
+        hidden = self.i2h(combined)
+        output = self.i2o(combined)
+        output = self.softmax(output)
+        return output, hidden
+
+    def initHidden(self):
+        return Variable(torch.zeros(1, self.hidden_size))
+
+class basicLSTM(nn.Module):
+    def __init__(self, embedding_dim, hidden_dim, vocab_size, tagset_size):
+        super(basicLSTM, self).__init__()
+        self.hidden_dim = hidden_dim
+
+        self.word_embeddings = nn.Embedding(vocab_size, embedding_dim)
+
+        # The LSTM takes word embeddings as inputs, and outputs hidden states
+        # with dimensionality hidden_dim.
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim)
+
+        # The linear layer that maps from hidden state space to tag space
+        self.hidden2tag = nn.Linear(hidden_dim, tagset_size)
+        self.hidden = self.init_hidden()
+
+    def init_hidden(self):
+        # Before we've done anything, we dont have any hidden state.
+        # Refer to the Pytorch documentation to see exactly
+        # why they have this dimensionality.
+        # The axes semantics are (num_layers, minibatch_size, hidden_dim)
+        return (autograd.Variable(torch.zeros(1, 1, self.hidden_dim)),
+                autograd.Variable(torch.zeros(1, 1, self.hidden_dim)))
+
+    def forward(self, sentence):
+        embeds = self.word_embeddings(sentence)
+        lstm_out, self.hidden = self.lstm(
+            embeds.view(len(sentence), 1, -1), self.hidden)
+        tag_space = self.hidden2tag(lstm_out.view(len(sentence), -1))
+        tag_scores = F.log_softmax(tag_space, dim=1)
+        return tag_scores
