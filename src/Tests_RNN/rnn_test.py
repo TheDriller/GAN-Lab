@@ -81,8 +81,6 @@ class Trainer():
                             generated_batch_tmp, hidden = self.G.forward(z[rnn_i, rnn_j].view(1, 1), hidden)
                             generated_batch = torch.cat((generated_batch, generated_batch_tmp.data[0,:]))
 
-                    # generated_batch = generated_batch.view(image_x, image_y)
-
                     real_prediction = torch.zeros(current_batch_size)
                     hidden = self.D.initHidden()
                     for rnn_i in range(0, current_batch_size):
@@ -91,13 +89,11 @@ class Trainer():
                             real_prediction[i] = res.data[0,0]
 
                     loss_d_r = self.D.loss(Variable(real_prediction), y_almost_ones)
-
                     generated_prediction = torch.zeros(current_batch_size)
                     hidden = self.D.initHidden()
-                    for rnn_i in range(0, current_batch_size):
-                        for rnn_j in range(0, x.shape[1], step):
-                            res, hidden = self.D.forward(generated_batch[rnn_i, rnn_j:rnn_j+step].view(1, step), hidden)
-                            real_prediction[i] = res.data[0,0]
+                    for rnn_i in range(0, generated_batch.shape[0]):
+                            res, hidden = self.D.forward(generated_batch[rnn_i:rnn_i+step].view(1, step), hidden)
+                            generated_prediction[i] = res.data[0,0]
 
                     loss_d_f = self.D.loss(generated_prediction, y_almost_zeros)
 
