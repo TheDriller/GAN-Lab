@@ -86,8 +86,7 @@ class Trainer():
 
                     temp.append(loss_d_r.data + loss_d_f.data)
                     loss_d_f.backward()
-                    last_d_loss = loss_d_r + loss_d_f
-
+                    last_d_loss = (loss_d_r + loss_d_f).data[0]
                     if last_d_loss > 0.7 * last_g_loss:
                         self.D_optimiser.step()
 
@@ -106,7 +105,7 @@ class Trainer():
                     loss_G.backward()
 
                     predictions.append(D_prediction.mean().data)
-                    last_g_loss = loss_G
+                    last_g_loss = loss_G.data[0]
                     if last_g_loss < 0.7 * last_d_loss:
                         self.G_optimiser.step()
 
