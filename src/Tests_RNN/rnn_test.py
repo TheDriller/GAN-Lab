@@ -96,7 +96,8 @@ class Trainer():
         for k in range(0, D_STEPS):
             self.D.zero_grad()
             print("real prediction start")
-            print(self.forward_D(batch, current_batch_size))
+            real_prediction = self.forward_D(batch, current_batch_size)
+            print(real_prediction)
             print("generated batch start")
             generated_batch = Variable(self.forward_G(current_batch_size))
 
