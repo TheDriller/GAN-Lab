@@ -133,13 +133,8 @@ class Trainer():
             real_song_nb = real_songs.shape[0]
             print(int((real_song_nb- 1) / MINIBATCH_SIZE) + 1)
             for batch_id in range(0,real_song_nb,MINIBATCH_SIZE):
-                print("back")
-                # size, x = self.create_data_batch()
+                print("New batch")
                 batch = torch.from_numpy(real_songs[batch_id:batch_id+MINIBATCH_SIZE-1])
-                # print(size)
-                # if size == 0:
-                #     break
-                # print(x)
                 batch = Variable(batch.double())
                 if cuda:
                     batch = batch.cuda()
@@ -151,6 +146,7 @@ class Trainer():
 
                 print(current_batch_size + G_STEPS)
 
+                # Train generator
                 generator_losses = self.train_generator(batch)
 
                 g_loss.append(np.mean(generator_losses))
@@ -161,22 +157,7 @@ class Trainer():
         G_in = np.random.normal(0.0, 1.0, [batch_size, LATENT_DIMENSION])
         return torch.from_numpy(G_in).type(torch.FloatTensor)
 
-    # def create_data_batch(self):
-    #     global index_list
-    #     size = np.min([MINIBATCH_SIZE, index_list.shape[0]])
-    #
-    #     if(size == 0):
-    #         return 0, []
-    #
-    #     indices = np.random.randint(0, index_list.shape[0], size = size)
-    #     names = index_list[indices]
-    #     index_list = np.delete(index_list, names)
-    #     batch = np.zeros([size, SONG_LENGTH])
-    #
-    #     for i in range (0, size):
-    #         batch[i] = np.load("../../data/" + str(names[i]) + ".npy")
-    #
-    #     return size, torch.from_numpy(batch).type(torch.FloatTensor)
+
 
     def forward_G(self, current_batch_size):
         z = Variable(self.create_noise_batch(current_batch_size))
