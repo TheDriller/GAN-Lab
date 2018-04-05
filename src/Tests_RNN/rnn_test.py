@@ -16,10 +16,6 @@ import torchvision.transforms as transforms
 
 cuda = torch.cuda.is_available()
 
-#global variable
-# index_list = np.arange(0, TRAIN_SET_SIZE)
-
-#estimation
 predictions = []
 g_loss = []
 d_loss = []
@@ -176,18 +172,15 @@ class Trainer():
         return generated_batch
 
     def forward_D(self, batch, current_batch_size):
-        # print(batch.size())
-        real_prediction = torch.zeros(current_batch_size)
+        prediction = torch.zeros(current_batch_size)
         hidden = self.D.initHidden()
         for batch_element in range(0, current_batch_size):
             for song_piece_begin in range(0, batch.shape[1], SONG_PIECE_SIZE):
-                #print(self.D.forward(x[batch_element, song_piece_begin:song_piece_begin+step].view(1, step), hidden))
                 res, hidden_res = self.D.forward(batch[batch_element, song_piece_begin:song_piece_begin+SONG_PIECE_SIZE].view(1, SONG_PIECE_SIZE).float(), hidden)
                 hidden = hidden_res
-                real_prediction[batch_element] = res.data[0,0]
-        # print(hidden)
-        print(real_prediction)
-        return real_prediction
+                prediction[batch_element] = res.data[0,0]
+        print(prediction)
+        return prediction
 
 T = Trainer()
 real_songs = load_real_songs()
