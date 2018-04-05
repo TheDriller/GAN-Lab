@@ -69,15 +69,6 @@ class Trainer():
         current_batch_size = batch.shape[0]
         losses = []
 
-<<<<<<< HEAD
-                y_almost_ones = Variable(torch.from_numpy(np.random.uniform(0.9, 0.1, current_batch_size)).type(torch.FloatTensor))
-                if cuda:
-                    y_almost_ones = y_almost_ones.cuda()
-
-                y_almost_zeros = Variable(torch.from_numpy(np.random.uniform(0.1, 0.1, current_batch_size)).type(torch.FloatTensor))
-                if cuda:
-                    y_almost_zeros = y_almost_zeros.cuda()
-=======
         for k in range(0, G_STEPS): # maybe add / remove training over MINIBATCH_SIZE
             z = Variable(self.create_noise_batch(current_batch_size))
             if cuda:
@@ -91,8 +82,6 @@ class Trainer():
             loss_G = self.G.loss(Variable(generated_prediction, requires_grad=True), y_almost_ones)
             temp.append(loss_G.data)
             loss_G.backward()
-
->>>>>>> b309801bea7a29981600ec2ed1b6ca81251d5c4d
 
             predictions.append(generated_prediction.mean())
             last_g_loss = loss_G.data[0]
