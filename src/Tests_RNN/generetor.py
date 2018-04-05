@@ -15,7 +15,7 @@ import torchvision.transforms as transforms
 nb_generate = 10
 
 def create_noise_batch():
-    G_in = np.random.normal(0.0, 1.0, [nb_generate, G_inputs])
+    G_in = np.random.normal(0.0, 1.0, [nb_generate, latent_dimension])
     return torch.from_numpy(G_in).type(torch.FloatTensor)
 
 generator = G_conv()
@@ -24,7 +24,7 @@ generator.eval()
 
 noise_batch = create_noise_batch()
 
-res = generator(Variable(noise_batch.view(nb_generate, G_inputs, 1, 1)))
+res = generator(Variable(noise_batch.view(nb_generate, latent_dimension, 1, 1)))
 res = res.view(nb_generate, image_x, image_y)
 
 for i in range(0, nb_generate):

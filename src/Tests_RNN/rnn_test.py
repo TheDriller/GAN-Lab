@@ -30,7 +30,7 @@ class Trainer():
         self.D = basic_rnn_discriminator(hidden_size)
         if cuda:
             self.D.cuda()
-        self.G = basic_rnn_generator(hidden_size, generator_output)
+        self.G = basic_rnn_generator(hidden_size, step)
         if cuda:
             self.G.cuda()
 
@@ -40,7 +40,7 @@ class Trainer():
 
     def train(self):
         global index_list
-        z_saved = Variable(self.create_noise_batch(1).view(1, G_inputs, 1, 1))
+        z_saved = Variable(self.create_noise_batch(1).view(1, latent_dimension, 1, 1))
         last_d_loss = 0
         last_g_loss = 0
 
@@ -69,7 +69,7 @@ class Trainer():
                     y_almost_zeros = y_almost_zeros.cuda()
 
                 temp = []
-                for k in range(0, D_steps):
+                for k in range(0, D_STEPS):
                     self.D.zero_grad()
                     print("real prediction start")
                     print(self.forward_D(x, current_batch_size))
@@ -127,7 +127,7 @@ class Trainer():
             #image.imsave("epoch_images/" + str(i) + ".png", image_temp[0].data)
 
     def create_noise_batch(self, batch_size):
-        G_in = np.random.normal(0.0, 1.0, [batch_size, G_inputs])
+        G_in = np.random.normal(0.0, 1.0, [batch_size, latent_dimension])
         return torch.from_numpy(G_in).type(torch.FloatTensor)
 
     def create_data_batch(self):
@@ -157,7 +157,7 @@ class Trainer():
         # evaluate generator RNN, by creating an image
         hidden = self.G.initHidden()
         for rnn_i in range(0, current_batch_size):
-            for rnn_j in range(0, G_inputs):
+            for rnn_j in range(0, latent_dimension):
                 generated_batch_tmp, hidden = self.G.forward(z[rnn_i, rnn_j].view(1, 1), hidden)
                 generated_batch = torch.cat((generated_batch, generated_batch_tmp.data[0,:]))
         print(generated_batch)
