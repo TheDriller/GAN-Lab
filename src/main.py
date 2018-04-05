@@ -108,7 +108,7 @@ class Trainer():
         batch = np.zeros([size, image_x * image_y])
 
         for i in range (0, size):
-            batch[i] = np.load("../data/" + str(names[i]) + ".npy")
+            batch[i] = np.load("../../data/" + str(names[i]) + ".npy")
 
         return size, torch.from_numpy(batch).type(torch.FloatTensor)
 
