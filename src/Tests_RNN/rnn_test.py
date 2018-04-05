@@ -70,6 +70,8 @@ class Trainer():
         y_almost_ones,y_almost_zeros = get_targets(current_batch_size)
 
         for k in range(0, G_STEPS): # maybe add / remove training over MINIBATCH_SIZE
+            print("Training generator - k = "+str(k))
+
             z = Variable(self.create_noise_batch(current_batch_size))
             if cuda:
                 z = z.cuda()
@@ -97,6 +99,7 @@ class Trainer():
         losses = []
         y_almost_ones,y_almost_zeros = get_targets(current_batch_size)
         for k in range(0, D_STEPS):
+            print("Training discriminator - k = "+str(k))
             self.D.zero_grad()
             print("real prediction start")
             real_prediction = self.forward_D(batch, current_batch_size)
@@ -131,10 +134,10 @@ class Trainer():
         for i in range(0, TOT_EPOCHS):
             print("TOT_EPOCHS: " + str(i))
             real_song_nb = real_songs.shape[0]
-            print(int((real_song_nb- 1) / MINIBATCH_SIZE) + 1)
+            # print(int((real_song_nb- 1) / MINIBATCH_SIZE) + 1)
             for batch_id in range(0,real_song_nb,MINIBATCH_SIZE):
-                print("New batch")
-                batch = torch.from_numpy(real_songs[batch_id:batch_id+MINIBATCH_SIZE-1])
+                print("Starting batch "+str(batch_id/MINIBATCH_SIZE))
+                batch = torch.from_numpy(real_songs[batch_id:batch_id+MINIBATCH_SIZE])
                 batch = Variable(batch.double())
                 if cuda:
                     batch = batch.cuda()
@@ -167,22 +170,27 @@ class Trainer():
         generated_batch = torch.FloatTensor()
 
         # generate song with the generator RNN
-        hidden = self.G.initHidden()
-        for batch_element in range(0, current_batch_size):
-            for song_piece_begin in range(0, LATENT_DIMENSION):
-                generated_batch_tmp, hidden = self.G.forward(z[batch_element, song_piece_begin].view(1, 1), hidden)
-                generated_batch = torch.cat((generated_batch, generated_batch_tmp.data[0,:]))
+        hidden = self.G.initHidden(current_batch_size)
+        # for batch_element in range(0, current_batch_size):
+            # print("Element of batch - "+str(batch_element))
+        # for song_piece_begin in range(0, LATENT_DIMENSION):
+
+        ##### TODO : Boucle pour lire le one to many (input nulle pendant SONG LENGTH en lisant les output avec les hidden)
+        generated_batch, hidden = self.G.forward(z, hidden)
+        generated_batch = generated_batch.data
+            # generated_batch = torch.cat((generated_batch, generated_batch_tmp.data[0,:]))
         print(generated_batch)
         return generated_batch
 
     def forward_D(self, batch, current_batch_size):
         prediction = torch.zeros(current_batch_size)
-        hidden = self.D.initHidden()
-        for batch_element in range(0, current_batch_size):
-            for song_piece_begin in range(0, batch.shape[1], SONG_PIECE_SIZE):
-                res, hidden_res = self.D.forward(batch[batch_element, song_piece_begin:song_piece_begin+SONG_PIECE_SIZE].view(1, SONG_PIECE_SIZE).float(), hidden)
-                hidden = hidden_res
-                prediction[batch_element] = res.data[0,0]
+        hidden = self.D.initHidden(current_batch_size)
+        # for batch_element in range(0, current_batch_size):
+            # print("Element of batch - "+str(batch_element))
+        for song_piece_begin in range(0, batch.shape[1], SONG_PIECE_SIZE):
+            res, hidden_res = self.D.forward(batch[:, song_piece_begin:song_piece_begin+SONG_PIECE_SIZE].float(), hidden)
+            hidden = hidden_res
+            prediction = res.data[:,0]
         print(prediction)
         return prediction
 
