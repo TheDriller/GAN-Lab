@@ -19,12 +19,15 @@ cuda = torch.cuda.is_available()
 predictions = []
 g_loss = []
 d_loss = []
+last_d_loss = 0
+last_g_loss = 0
 
 def load_real_songs():
     directory_str = "data/npy/"
     directory = os.fsencode(directory_str)
     song_nb = len([name for name in os.listdir(directory) if os.path.isfile(os.path.join(directory, name))])
-    songs = np.zeros((song_nb,SONG_LENGTH))
+    ###### !!!!!! Remove -1 if you only have .npy songs in your folder (beware of shitty .DS_Store)
+    songs = np.zeros((song_nb-1,SONG_LENGTH))
     i = 0
     for file in os.listdir(directory):
         filename = os.fsdecode(file)
@@ -64,6 +67,7 @@ class Trainer():
         # Train generator
         current_batch_size = batch.shape[0]
         losses = []
+        y_almost_ones,y_almost_zeros = get_targets(current_batch_size)
 
         for k in range(0, G_STEPS): # maybe add / remove training over MINIBATCH_SIZE
             z = Variable(self.create_noise_batch(current_batch_size))
@@ -73,10 +77,10 @@ class Trainer():
             print("start G")
             generated_batch = Variable(self.forward_G(current_batch_size))
             print("generated")
-            generated_prediction = Variable(self.forward_D(generated_batch.view(1, -1), current_batch_size))
+            generated_prediction = self.forward_D(generated_batch.view(1, -1), current_batch_size)
 
             loss_G = self.G.loss(Variable(generated_prediction, requires_grad=True), y_almost_ones)
-            temp.append(loss_G.data)
+            # temp.append(loss_G.data)
             loss_G.backward()
 
             predictions.append(generated_prediction.mean())
@@ -191,7 +195,7 @@ print("done")
 torch.save(T.G.state_dict(), "g_saved.pt")
 torch.save(T.D.state_dict(), "d_saved.pt")
 
-if save:
+if SAVE:
     plt.plot(predictions, label="test")
     plt.savefig("predictions.png")
     plt.show()
