@@ -76,8 +76,6 @@ class Trainer():
                     hidden = self.G.initHidden()
                     for rnn_i in range(0, current_batch_size):
                         for rnn_j in range(0, G_inputs):
-                            # print(hidden.size())
-                            # print(z[rnn_i, rnn_j].size())
                             generated_batch_tmp, hidden = self.G.forward(z[rnn_i, rnn_j].view(1, 1), hidden)
                             generated_batch = torch.cat((generated_batch, generated_batch_tmp.data[0,:]))
 
@@ -88,15 +86,22 @@ class Trainer():
                             res, hidden = self.D.forward(x[rnn_i, rnn_j:rnn_j+step].view(1, step), hidden)
                             real_prediction[i] = res.data[0,0]
 
-                    loss_d_r = self.D.loss(Variable(real_prediction), y_almost_ones)
+                    loss_d_r = self.D.loss(Variable(real_prediction, requires_grad=True), y_almost_ones)
+                    print(loss_d_r)
+                    loss_d_r.backward()
                     generated_prediction = torch.zeros(current_batch_size)
-                    hidden = self.D.initHidden()
-                    for rnn_i in range(0, generated_batch.shape[0]):
-                            res, hidden = self.D.forward(generated_batch[rnn_i:rnn_i+step].view(1, step), hidden)
-                            generated_prediction[i] = res.data[0,0]
+                    generated_batch = Variable(generated_batch)
+                    #print(generated_batch.size())
+                    #print(generated_batch[0].view(1, 1))
+                    hidden_dd = self.D.initHidden() # WTF if hidden here segfault
+                    #print(hidden)
+                    for rnn_i in range(0, image_x * image_y, step):
+                        res, hidden_dd = self.D.forward(generated_batch[rnn_i:rnn_i+step].view(1, step), hidden_dd)
+                        generated_prediction[i] = res.data[0,0]
 
-                    loss_d_f = self.D.loss(generated_prediction, y_almost_zeros)
-
+                    print(generated_prediction)
+                    loss_d_f = self.D.loss(Variable(generated_prediction, requires_grad=True), y_almost_zeros)
+                    print(loss_d_f)
                     temp.append(loss_d_r.data + loss_d_f.data)
                     loss_d_f.backward()
                     last_d_loss = (loss_d_r + loss_d_f).data[0]
@@ -106,14 +111,26 @@ class Trainer():
                 d_loss.append(np.mean(temp))
                 temp = []
 
-                for k in range(0, G_steps):
-                    z = Variable(self.create_noise_batch(current_batch_size)).view(-1, G_inputs, 1, 1)
+                for k in range(0, G_steps + current_batch_size): # maybe add / remove training over minibatch_size
+                    z = Variable(self.create_noise_batch(current_batch_size))
                     if cuda:
                         z = z.cuda()
-                    generated_batch = self.G(z)
 
-                    D_prediction = self.D(generated_batch.view(current_batch_size, 1, 28, 28)).squeeze() # 1x1
-                    loss_G = self.G.loss(D_prediction, y_almost_ones)
+                    generated_batch = torch.FloatTensor()
+                    for rnn_i in range(0, current_batch_size):
+                        for rnn_j in range(0, G_inputs):
+                            generated_batch_tmp, hidden = self.G.forward(z[rnn_i, rnn_j].view(1, 1), hidden)
+                            generated_batch = torch.cat((generated_batch, generated_batch_tmp.data[0,:]))
+
+                    generated_prediction = torch.zeros(current_batch_size)
+                    generated_batch = Variable(generated_batch)
+                    hidden = self.D.initHidden() # WTF if hidden here segfault
+                    #print(hidden)
+                    for rnn_i in range(0, image_x * image_y, step):
+                        res, hidden_dd = self.D.forward(generated_batch[rnn_i:rnn_i+step].view(1, step), hidden)
+                        generated_prediction[i] = res.data[0,0]
+
+                    loss_G = self.G.loss(Variable(generated_prediction, requires_grad=True), y_almost_ones)
                     temp.append(loss_G.data)
                     loss_G.backward()
 

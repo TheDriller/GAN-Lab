@@ -19,7 +19,9 @@ class basic_rnn_discriminator(nn.Module):
         self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, input, hidden):
-        combined = torch.cat((input, hidden), -1)
+        #print(input)
+        #print(hidden)
+        combined = torch.cat((input, hidden), 1)
         hidden = self.f_hidden(combined)
         output = self.f_output(combined)
         output = self.softmax(output)
@@ -40,7 +42,7 @@ class basic_rnn_generator(nn.Module):
         self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, input, hidden):
-        combined = torch.cat((input, hidden), -1)
+        combined = torch.cat((input, hidden), 1)
         hidden = self.f_hidden(combined)
         output = self.f_output(combined)
         output = self.softmax(output)

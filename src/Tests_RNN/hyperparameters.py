@@ -17,4 +17,4 @@ local = True
 hidden_size = 100
 G_inputs = image_x # ???
 generator_output = image_x
-step = 8
+step = 1
