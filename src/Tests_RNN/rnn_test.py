@@ -77,17 +77,16 @@ class Trainer():
                     generated_batch = Variable(self.forward_G(current_batch_size))
 
                     loss_d_r = self.D.loss(Variable(real_prediction, requires_grad=True), y_almost_ones)
-                    print(loss_d_r)
-                    loss_d_r.backward()
 
                     print("generated prediction start")
                     generated_prediction = self.forward_D(generated_batch.view(1, -1), current_batch_size)
 
                     print(generated_prediction)
                     loss_d_f = self.D.loss(Variable(generated_prediction, requires_grad=True), y_almost_zeros)
-                    print(loss_d_f)
+                    loss_total = loss_d_r + loss_d_f
+                    loss_total.backward()
+
                     temp.append(loss_d_r.data + loss_d_f.data)
-                    loss_d_f.backward()
                     last_d_loss = (loss_d_r + loss_d_f).data[0]
                     if last_d_loss > 0.7 * last_g_loss:
                         self.D_optimiser.step()
@@ -121,10 +120,6 @@ class Trainer():
                 g_loss.append(np.mean(temp_loc))
                 print("done G")
                 print(g_loss)
-
-            #image_temp = self.G.forward(z_saved).view(1, image_x, image_y)
-            #os.makedirs("epoch_images", exist_ok = True)
-            #image.imsave("epoch_images/" + str(i) + ".png", image_temp[0].data)
 
     def create_noise_batch(self, batch_size):
         G_in = np.random.normal(0.0, 1.0, [batch_size, G_inputs])
