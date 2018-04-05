@@ -19,3 +19,6 @@ beta1 = 0.5
 beta2 = 0.999
 mean = 0.0
 std = 0.02
+
+
+save = True

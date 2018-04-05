@@ -60,11 +60,11 @@ class Trainer():
                     x = x.cuda()
                 current_batch_size = x.shape[0]
 
-                y_almost_ones = Variable(torch.from_numpy(np.random.uniform(0.8, 1.0, current_batch_size)).type(torch.FloatTensor))
+                y_almost_ones = Variable(torch.from_numpy(np.random.uniform(0.9, 0.1, current_batch_size)).type(torch.FloatTensor))
                 if cuda:
                     y_almost_ones = y_almost_ones.cuda()
 
-                y_almost_zeros = Variable(torch.from_numpy(np.random.uniform(0.0, 0.2, current_batch_size)).type(torch.FloatTensor))
+                y_almost_zeros = Variable(torch.from_numpy(np.random.uniform(0.1, 0.1, current_batch_size)).type(torch.FloatTensor))
                 if cuda:
                     y_almost_zeros = y_almost_zeros.cuda()
 
