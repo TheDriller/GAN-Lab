@@ -46,10 +46,15 @@ class Trainer():
 
         for i in range(0, epoch):
             print("Epoch: " + str(i))
-            temp = []
 
+            print(int((train_size - 1) / minibatch_size) + 1)
             for batch_id in range(int((train_size - 1) / minibatch_size) + 1):
+                print("back")
                 size, x = self.create_data_batch()
+                print(size)
+                if size == 0:
+                    break
+                print(x)
                 x = Variable(x)
                 if cuda:
                     x = x.cuda()
@@ -63,41 +68,20 @@ class Trainer():
                 if cuda:
                     y_almost_zeros = y_almost_zeros.cuda()
 
+                temp = []
                 for k in range(0, D_steps):
                     self.D.zero_grad()
-
-#                    size, data_batch = self.create_data_batch()
-                    z = Variable(self.create_noise_batch(current_batch_size))
-                    if cuda:
-                        z = z.cuda()
-                    generated_batch = torch.FloatTensor()
-
-                    # evaluate generator RNN, by creating an image
-                    hidden = self.G.initHidden()
-                    for rnn_i in range(0, current_batch_size):
-                        for rnn_j in range(0, G_inputs):
-                            generated_batch_tmp, hidden = self.G.forward(z[rnn_i, rnn_j].view(1, 1), hidden)
-                            generated_batch = torch.cat((generated_batch, generated_batch_tmp.data[0,:]))
-
-                    real_prediction = torch.zeros(current_batch_size)
-                    hidden = self.D.initHidden()
-                    for rnn_i in range(0, current_batch_size):
-                        for rnn_j in range(0, x.shape[1], step):
-                            res, hidden = self.D.forward(x[rnn_i, rnn_j:rnn_j+step].view(1, step), hidden)
-                            real_prediction[i] = res.data[0,0]
+                    print("real prediction start")
+                    print(self.forward_D(x, current_batch_size))
+                    print("generated batch start")
+                    generated_batch = Variable(self.forward_G(current_batch_size))
 
                     loss_d_r = self.D.loss(Variable(real_prediction, requires_grad=True), y_almost_ones)
                     print(loss_d_r)
                     loss_d_r.backward()
-                    generated_prediction = torch.zeros(current_batch_size)
-                    generated_batch = Variable(generated_batch)
-                    #print(generated_batch.size())
-                    #print(generated_batch[0].view(1, 1))
-                    hidden_dd = self.D.initHidden() # WTF if hidden here segfault
-                    #print(hidden)
-                    for rnn_i in range(0, image_x * image_y, step):
-                        res, hidden_dd = self.D.forward(generated_batch[rnn_i:rnn_i+step].view(1, step), hidden_dd)
-                        generated_prediction[i] = res.data[0,0]
+
+                    print("generated prediction start")
+                    generated_prediction = self.forward_D(generated_batch.view(1, -1), current_batch_size)
 
                     print(generated_prediction)
                     loss_d_f = self.D.loss(Variable(generated_prediction, requires_grad=True), y_almost_zeros)
@@ -109,40 +93,38 @@ class Trainer():
                         self.D_optimiser.step()
 
                 d_loss.append(np.mean(temp))
-                temp = []
+                temp_loc = []
 
-                for k in range(0, G_steps + current_batch_size): # maybe add / remove training over minibatch_size
+                print(current_batch_size + G_steps)
+
+                for k in range(0, G_steps): # maybe add / remove training over minibatch_size
                     z = Variable(self.create_noise_batch(current_batch_size))
                     if cuda:
                         z = z.cuda()
 
-                    generated_batch = torch.FloatTensor()
-                    for rnn_i in range(0, current_batch_size):
-                        for rnn_j in range(0, G_inputs):
-                            generated_batch_tmp, hidden = self.G.forward(z[rnn_i, rnn_j].view(1, 1), hidden)
-                            generated_batch = torch.cat((generated_batch, generated_batch_tmp.data[0,:]))
-
-                    generated_prediction = torch.zeros(current_batch_size)
-                    generated_batch = Variable(generated_batch)
-                    hidden = self.D.initHidden() # WTF if hidden here segfault
-                    #print(hidden)
-                    for rnn_i in range(0, image_x * image_y, step):
-                        res, hidden_dd = self.D.forward(generated_batch[rnn_i:rnn_i+step].view(1, step), hidden)
-                        generated_prediction[i] = res.data[0,0]
+                    print("start G")
+                    generated_batch = Variable(self.forward_G(current_batch_size))
+                    print("generated")
+                    generated_prediction = Variable(self.forward_D(generated_batch.view(1, -1), current_batch_size))
 
                     loss_G = self.G.loss(Variable(generated_prediction, requires_grad=True), y_almost_ones)
                     temp.append(loss_G.data)
                     loss_G.backward()
 
-                    predictions.append(D_prediction.mean().data)
+
+                    predictions.append(generated_prediction.mean())
                     last_g_loss = loss_G.data[0]
+                    temp_loc.append(last_g_loss)
                     if last_g_loss < 0.7 * last_d_loss:
                         self.G_optimiser.step()
 
-                g_loss.append(np.mean(temp))
-            image_temp = self.G.forward(z_saved).view(1, image_x, image_y)
-            os.makedirs("epoch_images", exist_ok = True)
-            image.imsave("epoch_images/" + str(i) + ".png", image_temp[0].data)
+                g_loss.append(np.mean(temp_loc))
+                print("done G")
+                print(g_loss)
+
+            #image_temp = self.G.forward(z_saved).view(1, image_x, image_y)
+            #os.makedirs("epoch_images", exist_ok = True)
+            #image.imsave("epoch_images/" + str(i) + ".png", image_temp[0].data)
 
     def create_noise_batch(self, batch_size):
         G_in = np.random.normal(0.0, 1.0, [batch_size, G_inputs])
@@ -165,9 +147,40 @@ class Trainer():
 
         return size, torch.from_numpy(batch).type(torch.FloatTensor)
 
+    def forward_G(self, current_batch_size):
+        z = Variable(self.create_noise_batch(current_batch_size))
+        if cuda:
+            z = z.cuda()
+
+        generated_batch = torch.FloatTensor()
+
+        # evaluate generator RNN, by creating an image
+        hidden = self.G.initHidden()
+        for rnn_i in range(0, current_batch_size):
+            for rnn_j in range(0, G_inputs):
+                generated_batch_tmp, hidden = self.G.forward(z[rnn_i, rnn_j].view(1, 1), hidden)
+                generated_batch = torch.cat((generated_batch, generated_batch_tmp.data[0,:]))
+        print(generated_batch)
+        return generated_batch
+
+    def forward_D(self, x, current_batch_size):
+        print(x.size())
+        real_prediction = torch.zeros(current_batch_size)
+        hidden = self.D.initHidden()
+        for rnn_i in range(0, current_batch_size):
+            for rnn_j in range(0, x.shape[1], step):
+                #print(self.D.forward(x[rnn_i, rnn_j:rnn_j+step].view(1, step), hidden))
+                res, hidden_res = self.D.forward(x[rnn_i, rnn_j:rnn_j+step].view(1, step), hidden)
+                hidden = hidden_res
+                real_prediction[rnn_i] = res.data[0,0]
+        print(hidden)
+        print(real_prediction)
+        return real_prediction
 
 T = Trainer()
 T.train()
+
+print("done")
 
 torch.save(T.G.state_dict(), "g_saved.pt")
 torch.save(T.D.state_dict(), "d_saved.pt")

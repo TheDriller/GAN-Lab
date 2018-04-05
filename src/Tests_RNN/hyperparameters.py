@@ -1,6 +1,6 @@
 # hyperparameters
 D_steps = 1
-epoch = 2
+epoch = 1
 G_steps = 1
 image_x = 332
 image_y = 332

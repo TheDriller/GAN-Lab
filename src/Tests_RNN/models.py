@@ -16,7 +16,6 @@ class basic_rnn_discriminator(nn.Module):
 
         self.f_hidden = nn.Linear(step + hidden_size, hidden_size) # One layer only
         self.f_output = nn.Linear(step + hidden_size, 1)
-        self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, input, hidden):
         #print(input)
@@ -24,13 +23,13 @@ class basic_rnn_discriminator(nn.Module):
         combined = torch.cat((input, hidden), 1)
         hidden = self.f_hidden(combined)
         output = self.f_output(combined)
-        output = self.softmax(output)
+        output = F.sigmoid(output)
         return output, hidden
 
     def initHidden(self):
         return Variable(torch.zeros(1, self.hidden_size)) # h_0
 
-#1 generator cell procuce one line of the resulting  song
+#1 generator cell procuce one line of the resulting  song (temporary)
 class basic_rnn_generator(nn.Module):
     def __init__(self, hidden_size, output_size):
         super(basic_rnn_generator, self).__init__()
