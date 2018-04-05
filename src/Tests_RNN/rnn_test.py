@@ -79,7 +79,6 @@ class Trainer():
             temp.append(loss_G.data)
             loss_G.backward()
 
-
             predictions.append(generated_prediction.mean())
             last_g_loss = loss_G.data[0]
             losses.append(last_g_loss)

@@ -208,15 +208,3 @@ class Trainer():
 T = Trainer()
 T.load_mnist()
 T.train()
-
-
-
-# plt.plot(predictions, label="test")
-# plt.savefig("predictions.png")
-# plt.show()
-#
-# plt.plot(d_loss, label="d_loss")
-# plt.plot(g_loss, label="g_loss")
-# plt.legend(loc="best")
-# plt.savefig("loss.png")
-# plt.show()
