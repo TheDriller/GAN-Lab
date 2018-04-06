@@ -11,6 +11,7 @@ resized_size = 128
 nb_max_images = 100000
 
 # The original dataset directory filepath
+# It needs to contain 2 subfolders (train and test)
 original_dataset_dir = sys.argv[1]
 
 # The style is passed as a second argument, as a .txt
@@ -28,19 +29,23 @@ for i in range(0, len(images_name) - 1):
 # Iterate through all images in the original dataset and
 # resize and greyscale the ones that appear in the .txt file
 index = 0
-for file in os.listdir(original_dataset_dir):
-    if file in images_name:
-        # resize
-        image = Image.open(original_dataset_dir + file)
-        image_resized = resizeimage.resize_cover(image, [resized_size, resized_size])
-        image_resized.save(dataset_dir + file, image.format)
+for dir in os.listdir(original_dataset_dir):
+    if os.path.isdir(original_dataset_dir + dir):
+        for file in os.listdir(original_dataset_dir + dir):
+            if file in images_name:
+                print("Image n°" + str(index))
 
-        # greyscale
-        image = cv2.imread(dataset_dir + file)
-        image_greyscaled = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        cv2.imwrite(dataset_dir + file, image_greyscaled)
+                # resize
+                image = Image.open(original_dataset_dir + dir + "/" + file)
+                image_resized = resizeimage.resize_cover(image, [resized_size, resized_size])
+                image_resized.save(dataset_dir + file, image.format)
 
-        if index > nb_max_images:
-            break
-        else:
-            index += 1
+                # greyscale
+                image = cv2.imread(dataset_dir + file)
+                image_greyscaled = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                cv2.imwrite(dataset_dir + file, image_greyscaled)
+
+                if index > nb_max_images:
+                    break
+                else:
+                    index += 1
