@@ -25,7 +25,7 @@ class basic_rnn_discriminator(nn.Module):
         return output, hidden
 
     def initHidden(self,batch_size):
-        return Variable(torch.zeros(MINIBATCH_SIZE, self.HIDDEN_SIZE)) # h_0
+        return Variable(torch.zeros(batch_size, self.HIDDEN_SIZE)) # h_0
 
 #1 generator cell procuce one line of the resulting  song (temporary)
 class basic_rnn_generator(nn.Module):
@@ -46,4 +46,4 @@ class basic_rnn_generator(nn.Module):
         return output, hidden
 
     def initHidden(self,batch_size):
-        return Variable(torch.zeros(MINIBATCH_SIZE, self.HIDDEN_SIZE))
+        return Variable(torch.zeros(batch_size, self.HIDDEN_SIZE))

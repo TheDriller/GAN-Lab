@@ -27,7 +27,7 @@ def load_real_songs():
     directory = os.fsencode(directory_str)
     song_nb = len([name for name in os.listdir(directory) if os.path.isfile(os.path.join(directory, name))])
     ###### !!!!!! Remove -1 if you only have .npy songs in your folder (beware of shitty .DS_Store)
-    songs = np.zeros((song_nb-1,SONG_LENGTH))
+    songs = np.zeros((song_nb,SONG_LENGTH))
     i = 0
     for file in os.listdir(directory):
         filename = os.fsdecode(file)
@@ -79,7 +79,7 @@ class Trainer():
             print("start G")
             generated_batch = Variable(self.forward_G(current_batch_size))
             print("generated")
-            generated_prediction = self.forward_D(generated_batch.view(1, -1), current_batch_size)
+            generated_prediction = self.forward_D(generated_batch, current_batch_size)
 
             loss_G = self.G.loss(Variable(generated_prediction, requires_grad=True), y_almost_ones)
             # temp.append(loss_G.data)
@@ -103,16 +103,15 @@ class Trainer():
             self.D.zero_grad()
             print("real prediction start")
             real_prediction = self.forward_D(batch, current_batch_size)
-            print(real_prediction)
+
             print("generated batch start")
             generated_batch = Variable(self.forward_G(current_batch_size))
 
             loss_d_r = self.D.loss(Variable(real_prediction, requires_grad=True), y_almost_ones)
 
             print("generated prediction start")
-            generated_prediction = self.forward_D(generated_batch.view(1, -1), current_batch_size)
+            generated_prediction = self.forward_D(generated_batch, current_batch_size)
 
-            print(generated_prediction)
             loss_d_f = self.D.loss(Variable(generated_prediction, requires_grad=True), y_almost_zeros)
             loss_total = loss_d_r + loss_d_f
             loss_total.backward()
@@ -122,8 +121,6 @@ class Trainer():
             if last_d_loss > 0.7 * last_g_loss:
                 self.D_optimiser.step()
         return losses
-
-
 
     def train(self,real_songs):
         # global index_list
@@ -154,7 +151,6 @@ class Trainer():
 
                 g_loss.append(np.mean(generator_losses))
                 print("done G")
-                print(g_loss)
 
     def create_noise_batch(self, batch_size):
         G_in = np.random.normal(0.0, 1.0, [batch_size, LATENT_DIMENSION])
@@ -171,27 +167,25 @@ class Trainer():
 
         # generate song with the generator RNN
         hidden = self.G.initHidden(current_batch_size)
-        # for batch_element in range(0, current_batch_size):
-            # print("Element of batch - "+str(batch_element))
-        # for song_piece_begin in range(0, LATENT_DIMENSION):
+        generated_batch = torch.zeros(current_batch_size, SONG_LENGTH)
 
-        ##### TODO : Boucle pour lire le one to many (input nulle pendant SONG LENGTH en lisant les output avec les hidden)
-        generated_batch, hidden = self.G.forward(z, hidden)
-        generated_batch = generated_batch.data
-            # generated_batch = torch.cat((generated_batch, generated_batch_tmp.data[0,:]))
-        print(generated_batch)
+        generated_batch_tmp, hidden = self.G.forward(z, hidden)
+        generated_batch[:, 0:SONG_PIECE_SIZE] = generated_batch_tmp.data
+        zeros = Variable(torch.zeros(current_batch_size, LATENT_DIMENSION).type(torch.FloatTensor))
+        for i in range(SONG_PIECE_SIZE, SONG_LENGTH, SONG_PIECE_SIZE):
+            generated_batch_tmp, hidden = self.G.forward(zeros, hidden)
+            generated_batch[:, i:i+SONG_PIECE_SIZE] = generated_batch_tmp.data
+
         return generated_batch
 
     def forward_D(self, batch, current_batch_size):
         prediction = torch.zeros(current_batch_size)
         hidden = self.D.initHidden(current_batch_size)
-        # for batch_element in range(0, current_batch_size):
-            # print("Element of batch - "+str(batch_element))
+
         for song_piece_begin in range(0, batch.shape[1], SONG_PIECE_SIZE):
             res, hidden_res = self.D.forward(batch[:, song_piece_begin:song_piece_begin+SONG_PIECE_SIZE].float(), hidden)
             hidden = hidden_res
             prediction = res.data[:,0]
-        print(prediction)
         return prediction
 
 T = Trainer()
