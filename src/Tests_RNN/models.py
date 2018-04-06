@@ -47,3 +47,4 @@ class basic_rnn_generator(nn.Module):
 
     def initHidden(self,batch_size):
         return Variable(torch.zeros(batch_size, self.HIDDEN_SIZE))
+

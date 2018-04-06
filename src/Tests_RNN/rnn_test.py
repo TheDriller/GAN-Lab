@@ -167,11 +167,17 @@ class Trainer():
 
         # generate song with the generator RNN
         hidden = self.G.initHidden(current_batch_size)
+        if cuda:
+            hidden.cuda()
+
         generated_batch = torch.zeros(current_batch_size, SONG_LENGTH)
 
         generated_batch_tmp, hidden = self.G.forward(z, hidden)
         generated_batch[:, 0:SONG_PIECE_SIZE] = generated_batch_tmp.data
         zeros = Variable(torch.zeros(current_batch_size, LATENT_DIMENSION).type(torch.FloatTensor))
+        if cuda:
+            zeros.cuda()
+
         for i in range(SONG_PIECE_SIZE, SONG_LENGTH, SONG_PIECE_SIZE):
             generated_batch_tmp, hidden = self.G.forward(zeros, hidden)
             generated_batch[:, i:i+SONG_PIECE_SIZE] = generated_batch_tmp.data
@@ -181,6 +187,8 @@ class Trainer():
     def forward_D(self, batch, current_batch_size):
         prediction = torch.zeros(current_batch_size)
         hidden = self.D.initHidden(current_batch_size)
+        if cuda:
+            hidden.cuda
 
         for song_piece_begin in range(0, batch.shape[1], SONG_PIECE_SIZE):
             res, hidden_res = self.D.forward(batch[:, song_piece_begin:song_piece_begin+SONG_PIECE_SIZE].float(), hidden)
