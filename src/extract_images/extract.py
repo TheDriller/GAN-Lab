@@ -8,7 +8,7 @@ import sys
 resized_size = 128
 
 # Number of images to extract
-nb_max_images = 200
+nb_max_images = 100000
 
 # The original dataset directory filepath
 original_dataset_dir = sys.argv[1]
@@ -17,8 +17,6 @@ original_dataset_dir = sys.argv[1]
 # file with the name of an image in each line
 style = sys.argv[2].replace(".txt", "")
 dataset_dir = style + "_dataset/"
-# TODO:  must download entire dataset
-# original_dataset_dir = "train/"
 os.makedirs(dataset_dir, exist_ok = True)
 
 # Extract the names of the .jpg files from the .txt file
