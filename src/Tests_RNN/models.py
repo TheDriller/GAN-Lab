@@ -24,8 +24,8 @@ class basic_rnn_discriminator(nn.Module):
         output = F.sigmoid(output)
         return output, hidden
 
-    def initHidden(self):
-        return Variable(torch.zeros(1, self.HIDDEN_SIZE)) # h_0
+    def initHidden(self,batch_size):
+        return Variable(torch.zeros(MINIBATCH_SIZE, self.HIDDEN_SIZE)) # h_0
 
 #1 generator cell procuce one line of the resulting  song (temporary)
 class basic_rnn_generator(nn.Module):
@@ -34,8 +34,8 @@ class basic_rnn_generator(nn.Module):
         self.HIDDEN_SIZE = HIDDEN_SIZE
         self.loss =  nn.BCELoss()
 
-        self.f_hidden = nn.Linear(1 + HIDDEN_SIZE, HIDDEN_SIZE)
-        self.f_output = nn.Linear(1 + HIDDEN_SIZE, output_size)
+        self.f_hidden = nn.Linear(LATENT_DIMENSION + HIDDEN_SIZE, HIDDEN_SIZE)
+        self.f_output = nn.Linear(LATENT_DIMENSION + HIDDEN_SIZE, output_size)
         self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, input, hidden):
@@ -45,5 +45,5 @@ class basic_rnn_generator(nn.Module):
         output = self.softmax(output)
         return output, hidden
 
-    def initHidden(self):
-        return Variable(torch.zeros(1, self.HIDDEN_SIZE))
+    def initHidden(self,batch_size):
+        return Variable(torch.zeros(MINIBATCH_SIZE, self.HIDDEN_SIZE))
