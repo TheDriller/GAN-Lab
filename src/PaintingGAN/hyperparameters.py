@@ -1,9 +1,9 @@
 # hyperparameters
-D_steps = 1
-G_steps = 1
-nb_epoch = 30
+D_steps = 5
+G_steps = 5
+nb_epoch = 100
 
-model_complexity = 16
+model_complexity = 128
 
 G_inputs = 100
 

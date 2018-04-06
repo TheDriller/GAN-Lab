@@ -45,7 +45,7 @@ class G_conv(nn.Module):
     def __init__(self):
         super(G_conv, self).__init__()
         self.loss = nn.BCELoss()
-        self.deconv1 = nn.ConvTranspose2d(100, 8 * model_complexity, 4, 1, 0)
+        self.deconv1 = nn.ConvTranspose2d(G_inputs, 8 * model_complexity, 4, 1, 0)
         self.deconv1_bn = nn.BatchNorm2d(8 * model_complexity)
         self.deconv2 = nn.ConvTranspose2d(8 * model_complexity, 4 * model_complexity, 4, 2, 1)
         self.deconv2_bn = nn.BatchNorm2d(4 * model_complexity)

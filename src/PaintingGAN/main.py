@@ -151,7 +151,7 @@ class Trainer():
 
     def write_image(self, e):
         # Write generated image
-        image_temp = self.G(self.z_saved).view(1, image_x, image_y * self.nb_image_to_generate)
+        image_temp = self.G(self.z_saved).view(1, image_x * self.nb_image_to_generate, image_y)
         os.makedirs("results", exist_ok = True)
         image.imsave("results/gen_epoch_" + str(e) + ".png", image_temp[0].data)
 
@@ -193,13 +193,18 @@ class Trainer():
 
         self.train_loader = torch.utils.data.DataLoader(trainset, batch_size=minibatch_size, shuffle=True, num_workers=2)
 
-    def save_models(self):
+    def save_models(self, path="results/"):
         # Save trained models to disk
-        torch.save(self.G.state_dict(), "results/g_saved.pt")
-        torch.save(self.D.state_dict(), "results/d_saved.pt")
+        torch.save(self.G.state_dict(), path + "g_saved.pt")
+        torch.save(self.D.state_dict(), path + "d_saved.pt")
 
 
-T = Trainer()
-T.load_dataset(path_to_images = "data")
-T.train()
-#T.save_models()
+def main():
+    T = Trainer()
+    T.load_dataset(path_to_images = "data")
+    T.train()
+    T.save_models()
+
+if __name__ == "__main__":
+    main()
+

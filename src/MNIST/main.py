@@ -58,8 +58,9 @@ class Trainer():
 
                 current_batch_size = x.shape[0]
 
-                #if batch_idx > 20:
-                #    break
+                if batch_idx * minibatch_size > nb_images_to_use:
+                    print("Stopped at batch : " + str(batch_idx) + " with batch size of " + str(minibatch_size))
+                    break
 
                 # Useful variables for training
                 x = Variable(x)
@@ -155,7 +156,7 @@ class Trainer():
             prefix = "conv_"
 
         # Write generated image
-        image_temp = self.G(self.z_saved).view(1, image_x, image_y * self.nb_image_to_generate)
+        image_temp = self.G(self.z_saved).view(1, image_x * self.nb_image_to_generate, image_y)
         os.makedirs("results", exist_ok = True)
         image.imsave("results/" + prefix + "gen_epoch_" + str(e) + ".png", image_temp[0].data)
 
@@ -208,3 +209,4 @@ class Trainer():
 T = Trainer()
 T.load_mnist()
 T.train()
+T.save_models()
