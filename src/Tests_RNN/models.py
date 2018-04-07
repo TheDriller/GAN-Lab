@@ -28,7 +28,7 @@ class basic_rnn_discriminator(nn.Module):
         prediction = torch.zeros(current_batch_size)
         hidden = self.initHidden(current_batch_size)
         if cuda:
-            hidden.cuda
+            hidden.cuda()
 
         for song_piece_begin in range(0, batch.shape[1], SONG_PIECE_SIZE):
             res, hidden_res = self.forward(batch[:, song_piece_begin:song_piece_begin+SONG_PIECE_SIZE].float(), hidden)
