@@ -14,8 +14,6 @@ import os
 import torchvision.datasets as dset
 import torchvision.transforms as transforms
 
-cuda = torch.cuda.is_available()
-
 predictions = []
 g_loss = []
 d_loss = []
@@ -77,9 +75,10 @@ class Trainer():
                 z = z.cuda()
 
             print("start G")
-            generated_batch = Variable(self.forward_G(current_batch_size))
+
+            generated_batch = Variable(self.G.forward_G(current_batch_size, z))
             print("generated")
-            generated_prediction = self.forward_D(generated_batch, current_batch_size)
+            generated_prediction = self.D.forward_D(generated_batch, current_batch_size)
 
             loss_G = self.G.loss(Variable(generated_prediction, requires_grad=True), y_almost_ones)
             # temp.append(loss_G.data)
@@ -102,15 +101,19 @@ class Trainer():
             print("Training discriminator - k = "+str(k))
             self.D.zero_grad()
             print("real prediction start")
-            real_prediction = self.forward_D(batch, current_batch_size)
+            real_prediction = self.D.forward_D(batch, current_batch_size)
 
             print("generated batch start")
-            generated_batch = Variable(self.forward_G(current_batch_size))
+            z = Variable(self.create_noise_batch(current_batch_size))
+            if cuda:
+                z = z.cuda()
+
+            generated_batch = Variable(self.G.forward_G(current_batch_size, z))
 
             loss_d_r = self.D.loss(Variable(real_prediction, requires_grad=True), y_almost_ones)
 
             print("generated prediction start")
-            generated_prediction = self.forward_D(generated_batch, current_batch_size)
+            generated_prediction = self.D.forward_D(generated_batch, current_batch_size)
 
             loss_d_f = self.D.loss(Variable(generated_prediction, requires_grad=True), y_almost_zeros)
             loss_total = loss_d_r + loss_d_f
@@ -155,46 +158,6 @@ class Trainer():
     def create_noise_batch(self, batch_size):
         G_in = np.random.normal(0.0, 1.0, [batch_size, LATENT_DIMENSION])
         return torch.from_numpy(G_in).type(torch.FloatTensor)
-
-
-
-    def forward_G(self, current_batch_size):
-        z = Variable(self.create_noise_batch(current_batch_size))
-        if cuda:
-            z = z.cuda()
-
-        generated_batch = torch.FloatTensor()
-
-        # generate song with the generator RNN
-        hidden = self.G.initHidden(current_batch_size)
-        if cuda:
-            hidden.cuda()
-
-        generated_batch = torch.zeros(current_batch_size, SONG_LENGTH)
-
-        generated_batch_tmp, hidden = self.G.forward(z, hidden)
-        generated_batch[:, 0:SONG_PIECE_SIZE] = generated_batch_tmp.data
-        zeros = Variable(torch.zeros(current_batch_size, LATENT_DIMENSION).type(torch.FloatTensor))
-        if cuda:
-            zeros.cuda()
-
-        for i in range(SONG_PIECE_SIZE, SONG_LENGTH, SONG_PIECE_SIZE):
-            generated_batch_tmp, hidden = self.G.forward(zeros, hidden)
-            generated_batch[:, i:i+SONG_PIECE_SIZE] = generated_batch_tmp.data
-
-        return generated_batch
-
-    def forward_D(self, batch, current_batch_size):
-        prediction = torch.zeros(current_batch_size)
-        hidden = self.D.initHidden(current_batch_size)
-        if cuda:
-            hidden.cuda
-
-        for song_piece_begin in range(0, batch.shape[1], SONG_PIECE_SIZE):
-            res, hidden_res = self.D.forward(batch[:, song_piece_begin:song_piece_begin+SONG_PIECE_SIZE].float(), hidden)
-            hidden = hidden_res
-            prediction = res.data[:,0]
-        return prediction
 
 T = Trainer()
 real_songs = load_real_songs()

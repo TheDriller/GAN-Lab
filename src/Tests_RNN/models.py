@@ -24,6 +24,19 @@ class basic_rnn_discriminator(nn.Module):
         output = F.sigmoid(output)
         return output, hidden
 
+    def forward_D(self, batch, current_batch_size):
+        prediction = torch.zeros(current_batch_size)
+        hidden = self.initHidden(current_batch_size)
+        if cuda:
+            hidden.cuda
+
+        for song_piece_begin in range(0, batch.shape[1], SONG_PIECE_SIZE):
+            res, hidden_res = self.forward(batch[:, song_piece_begin:song_piece_begin+SONG_PIECE_SIZE].float(), hidden)
+            hidden = hidden_res
+            prediction = res.data[:,0]
+        return prediction
+
+
     def initHidden(self,batch_size):
         return Variable(torch.zeros(batch_size, self.HIDDEN_SIZE)) # h_0
 
@@ -45,6 +58,27 @@ class basic_rnn_generator(nn.Module):
         output = self.softmax(output)
         return output, hidden
 
+    def forward_G(self, current_batch_size, z):
+        generated_batch = torch.FloatTensor()
+
+        # generate song with the generator RNN
+        hidden = self.initHidden(current_batch_size)
+        if cuda:
+            hidden.cuda()
+
+        generated_batch = torch.zeros(current_batch_size, SONG_LENGTH)
+
+        generated_batch_tmp, hidden = self.forward(z, hidden)
+        generated_batch[:, 0:SONG_PIECE_SIZE] = generated_batch_tmp.data
+        zeros = Variable(torch.zeros(current_batch_size, LATENT_DIMENSION).type(torch.FloatTensor))
+        if cuda:
+            zeros.cuda()
+
+        for i in range(SONG_PIECE_SIZE, SONG_LENGTH, SONG_PIECE_SIZE):
+            generated_batch_tmp, hidden = self.forward(zeros, hidden)
+            generated_batch[:, i:i+SONG_PIECE_SIZE] = generated_batch_tmp.data
+
+        return generated_batch
+
     def initHidden(self,batch_size):
         return Variable(torch.zeros(batch_size, self.HIDDEN_SIZE))
-
