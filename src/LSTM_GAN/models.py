@@ -8,8 +8,6 @@ from hyperparameters import *
 # inspired from C-RNN-GAN
 # https://arxiv.org/pdf/1611.09904.pdf
 
-# !! LSTM which thing do what etc...
-
 class LSTM_generator(nn.Module):
     def __init__(self, HIDDEN_SIZE, output_size):
         super(LSTM_generator, self).__init__()
