@@ -83,6 +83,8 @@ class Trainer():
             print("start G")
 
             generated_batch = Variable(self.G.forward_G(current_batch_size, z))
+            if cuda:
+                generated_batch = generated_batch.cuda()
             print("generated")
             generated_prediction = self.D.forward_D(generated_batch, current_batch_size)
 
@@ -116,6 +118,8 @@ class Trainer():
 
             generated_batch = Variable(self.G.forward_G(current_batch_size, z))
 
+            if cuda:
+                generated_batch = generated_batch.cuda()
             loss_d_r = self.D.loss(Variable(real_prediction, requires_grad=True), y_almost_ones)
 
             print("generated prediction start")
