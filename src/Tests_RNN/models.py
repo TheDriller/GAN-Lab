@@ -28,7 +28,7 @@ class basic_rnn_discriminator(nn.Module):
         prediction = torch.zeros(current_batch_size)
         hidden = self.initHidden(current_batch_size)
         if cuda:
-            hidden.cuda()
+            hidden = hidden.cuda()
 
         for song_piece_begin in range(0, batch.shape[1], SONG_PIECE_SIZE):
             res, hidden_res = self.forward(batch[:, song_piece_begin:song_piece_begin+SONG_PIECE_SIZE].float(), hidden)
@@ -64,7 +64,7 @@ class basic_rnn_generator(nn.Module):
         # generate song with the generator RNN
         hidden = self.initHidden(current_batch_size)
         if cuda:
-            hidden.cuda()
+            hidden = hidden.cuda()
 
         generated_batch = torch.zeros(current_batch_size, SONG_LENGTH)
 
@@ -72,7 +72,7 @@ class basic_rnn_generator(nn.Module):
         generated_batch[:, 0:SONG_PIECE_SIZE] = generated_batch_tmp.data
         zeros = Variable(torch.zeros(current_batch_size, LATENT_DIMENSION).type(torch.FloatTensor))
         if cuda:
-            zeros.cuda()
+            zeros = zeros.cuda()
 
         for i in range(SONG_PIECE_SIZE, SONG_LENGTH, SONG_PIECE_SIZE):
             generated_batch_tmp, hidden = self.forward(zeros, hidden)
