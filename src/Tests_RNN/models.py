@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from hyperparameters import *
 
-#from pytorch documentation
+# inspired from pytorch examples
 
 #note by note: input size of 1 (one sample of input, i.e one note or one frequency)
 class basic_rnn_discriminator(nn.Module):

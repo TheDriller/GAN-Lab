@@ -24,7 +24,13 @@ def load_real_songs():
     directory_str = "data/npy/"
     directory = os.fsencode(directory_str)
     song_nb = len([name for name in os.listdir(directory) if os.path.isfile(os.path.join(directory, name))])
-    ###### !!!!!! Remove -1 if you only have .npy songs in your folder (beware of shitty .DS_Store)
+
+    #temporary fix for DS_STORE problem
+    for file in os.listdir(directory):
+        filename = os.fsdecode(file)
+        if filename.endswith(".DS_STORE"):
+            song_nb = song_nb - 1
+
     songs = np.zeros((song_nb,SONG_LENGTH))
     i = 0
     for file in os.listdir(directory):

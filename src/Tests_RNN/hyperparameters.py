@@ -15,3 +15,4 @@ LATENT_DIMENSION = 10 # ???
 SONG_PIECE_SIZE = 8
 SAVE = 1
 cuda = torch.cuda.is_available()
+DROPOUT_PROB = 0.4 # ???
