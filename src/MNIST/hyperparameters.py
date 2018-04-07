@@ -5,7 +5,7 @@ nb_epoch = 100
 
 model_complexity = 64
 
-G_inputs = 1
+G_inputs = 100
 
 image_x = 64
 image_y = 64

@@ -44,7 +44,7 @@ class G_conv(nn.Module):
     def __init__(self):
         super(G_conv, self).__init__()
         self.loss = nn.BCELoss()
-        self.deconv1 = nn.ConvTranspose2d(G_inputs, 8 * model_complexity, 4, 1, 0)
+        self.deconv1 = nn.ConvTranspose2d(100, 8 * model_complexity, 4, 1, 0)
         self.deconv1_bn = nn.BatchNorm2d(8 * model_complexity)
         self.deconv2 = nn.ConvTranspose2d(8 * model_complexity, 4 * model_complexity, 4, 2, 1)
         self.deconv2_bn = nn.BatchNorm2d(4 * model_complexity)
@@ -54,7 +54,9 @@ class G_conv(nn.Module):
         self.deconv4_bn = nn.BatchNorm2d(1 * model_complexity)
         self.deconv5 = nn.ConvTranspose2d(1 * model_complexity, 1 * model_complexity, 4, 2, 1)
         self.deconv5_bn = nn.BatchNorm2d(1 * model_complexity)
-        self.deconv6 = nn.ConvTranspose2d(1 * model_complexity, 1, 4, 2, 1)
+        self.deconv6 = nn.ConvTranspose2d(1 * model_complexity, 1 * model_complexity, 4, 2, 1)
+        self.deconv6_bn = nn.BatchNorm2d(1 * model_complexity)
+        self.deconv7 = nn.ConvTranspose2d(1 * model_complexity, 1, 4, 2, 1)
         self.weights_init(mean, std)
 
     def weights_init(self, mean, std):
@@ -68,7 +70,8 @@ class G_conv(nn.Module):
         x = F.relu(self.deconv3_bn(self.deconv3(x)))
         x = F.relu(self.deconv4_bn(self.deconv4(x)))
         x = F.relu(self.deconv5_bn(self.deconv5(x)))
-        x = F.tanh(self.deconv6(x))
+        x = F.relu(self.deconv6_bn(self.deconv6(x)))
+        x = F.tanh(self.deconv7(x))
 
         return x
 
@@ -89,6 +92,8 @@ class D_conv(nn.Module):
         self.conv2_bn = nn.BatchNorm2d(2 * model_complexity)
         self.conv22 = nn.Conv2d(2 * model_complexity, 2 * model_complexity, 4, 2, 1)
         self.conv22_bn = nn.BatchNorm2d(2 * model_complexity)
+        self.conv23 = nn.Conv2d(2 * model_complexity, 2 * model_complexity, 4, 2, 1)
+        self.conv23_bn = nn.BatchNorm2d(2 * model_complexity)
         self.conv3 = nn.Conv2d(2 * model_complexity, 4 * model_complexity, 4, 2, 1)
         self.conv3_bn = nn.BatchNorm2d(4 * model_complexity)
         self.conv4 = nn.Conv2d(4 * model_complexity, 8 * model_complexity, 4, 2, 1)
@@ -104,6 +109,7 @@ class D_conv(nn.Module):
         x = F.leaky_relu(self.conv1(input), 0.2)
         x = F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2)
         x = F.leaky_relu(self.conv22_bn(self.conv22(x)), 0.2)
+        x = F.leaky_relu(self.conv23_bn(self.conv23(x)), 0.2)
         x = F.leaky_relu(self.conv3_bn(self.conv3(x)), 0.2)
         x = F.leaky_relu(self.conv4_bn(self.conv4(x)), 0.2)
         x = F.sigmoid(self.conv5(x))

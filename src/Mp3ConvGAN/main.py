@@ -14,10 +14,12 @@ import os
 import torchvision.datasets as dset
 import torchvision.transforms as transforms
 
+import torch.utils.data as datautils
+
 
 #Training
 class Trainer():
-    def __init__(self, save_path = "results/", output_results = True):
+    def __init__(self, output_results = True):
         self.cuda = torch.cuda.is_available()
 
         # Models
@@ -33,7 +35,6 @@ class Trainer():
         self.G_optimiser = optim.Adam(self.G.parameters(), lr = lr, betas = (beta1, beta2))
 
         # Variables to create plots and images
-        self.save_path = save_path
         self.output_results = output_results
         self.nb_image_to_generate = 5
         self.predictions = []
@@ -56,12 +57,8 @@ class Trainer():
 
             # Start loop for each minibatch
             for batch_idx, (x, target) in enumerate(self.train_loader):
-                
                 current_batch_size = x.shape[0]
-
-                # Remove useless channels
-                x = x[:,1,:,:].contiguous().view(current_batch_size, 1, image_x, image_y)
-
+                x = x.view(-1, 1, image_x, image_y)
                 #if batch_idx > 20:
                 #    break
 
@@ -147,13 +144,13 @@ class Trainer():
             self.d_losses.append(np.mean(d_loss))
             self.g_losses.append(np.mean(g_loss))
 
-            self.write_image(e)
+            self.write_npy(e)
             self.create_plots()
 
-    def write_image(self, e):
+    def write_npy(self, e):
         # Write generated image
-        image_temp = self.G(self.z_saved).view(1, image_x * self.nb_image_to_generate, image_y)
-        image.imsave(self.save_path + "gen_epoch_" + str(e) + ".png", image_temp[0].data, cmap='gray')
+        image_temp = self.G(self.z_saved).view(self.nb_image_to_generate, image_x, image_y)
+        np.save("results/gen_batch_epoch_" + str(e), image_temp.data.cpu().numpy())
 
 
     def create_plots(self):
@@ -166,7 +163,7 @@ class Trainer():
         plt.plot(self.predictions)
         plt.xlabel("Epoch")
         plt.ylabel("Discriminator prediction")
-        plt.savefig(self.save_path + "" + prefix + "predictions.png")
+        plt.savefig("results/" + prefix + "predictions.png")
 
         plt.clf()
 
@@ -176,40 +173,36 @@ class Trainer():
         plt.legend(loc="best")
         plt.xlabel("Epoch")
         plt.ylabel("Loss")
-        plt.savefig(self.save_path + "" + prefix + "losses.png")
+        plt.savefig("results/" + prefix + "losses.png")
 
         plt.clf()
 
 
     def load_dataset(self, path_to_images):
         # load custom dataset
+        import glob, os
+        files = glob.glob(path_to_images + "*.npy")
+        data = np.ndarray((len(files), image_x, image_y))
 
-        transform = transforms.Compose([
-                        transforms.ToTensor(),
-                        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-                    ])
+        for i, file in enumerate(files):
+            data[i] = np.load(file).reshape((image_x, image_y))
 
-        trainset = dset.ImageFolder(root = path_to_images,transform=transform)
+        dataset = datautils.TensorDataset(torch.from_numpy(data).type(torch.FloatTensor), torch.ones(data.shape))
 
-        self.train_loader = torch.utils.data.DataLoader(trainset, batch_size=minibatch_size, shuffle=True, num_workers=2)
+        self.train_loader = torch.utils.data.DataLoader(dataset, batch_size=minibatch_size, shuffle=True, num_workers=2)
 
-    def save_models(self):
+
+
+    def save_models(self, path="results/"):
         # Save trained models to disk
-        torch.save(self.G.state_dict(), self.save_path + "g_saved.pt")
-        torch.save(self.D.state_dict(), self.save_path + "d_saved.pt")
+        torch.save(self.G.state_dict(), path + "g_saved.pt")
+        torch.save(self.D.state_dict(), path + "d_saved.pt")
 
 
 def main():
-    # Create trainer and load data
-    T = Trainer(save_path="cubism_data_results/")
-    T.load_dataset(path_to_images = "cubism_data")
-    # Save hyperparameter config
-    from shutil import copyfile
-    os.makedirs(T.save_path, exist_ok = True)
-    copyfile("hyperparameters.py", T.save_path + "hyperparameters.py")
-    # Start training
+    T = Trainer()
+    T.load_dataset(path_to_images = "D:/Programming/Ai project/mp3_data/Split/npy/")
     T.train()
-    # Save trained models
     T.save_models()
 
 if __name__ == "__main__":

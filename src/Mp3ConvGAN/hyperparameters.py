@@ -1,14 +1,14 @@
 # hyperparameters
-D_steps = 3
-G_steps = 3
-nb_epoch = 50
+D_steps = 5
+G_steps = 5
+nb_epoch = 100
 
-model_complexity = 256
+model_complexity = 128
 
-G_inputs = 1000
+G_inputs = 100
 
-image_x = 128
-image_y = 128
+image_x = 256
+image_y = 256
 
 minibatch_size = 16
 train_size = 1 # ???
