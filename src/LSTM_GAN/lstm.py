@@ -81,6 +81,10 @@ class Trainer():
                 z = z.cuda()
 
             generated_batch = Variable(self.G.forward_G(current_batch_size, z))
+
+            if cuda:
+                generated_batch = generated_batch.cuda()
+
             print("generated")
             generated_prediction = self.D.forward_D(generated_batch.view(int(generated_batch.size(1) / SONG_PIECE_SIZE), generated_batch.size(0), -1))
 
@@ -112,6 +116,8 @@ class Trainer():
 
             generated_batch = Variable(self.G.forward_G(current_batch_size, z))
 
+            if cuda:
+                generated_batch = generated_batch.cuda()
             loss_d_r = self.D.loss(real_prediction.squeeze(), y_almost_ones)
 
             print("generated prediction start")
