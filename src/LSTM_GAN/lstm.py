@@ -174,18 +174,18 @@ class Trainer():
 
                 g_loss.append(np.mean(generator_losses))
 
-            self.write_epoch_song(z_saved)
+            self.write_epoch_song(z_saved, i)
 
     def create_noise_batch(self, batch_size):
         G_in = np.random.normal(0.0, 1.0, [batch_size, LATENT_DIMENSION])
         return torch.from_numpy(G_in).type(torch.FloatTensor)
 
-    def write_epoch_song(self, z):
+    def write_epoch_song(self, z, epoch):
         dir_saved = "data/saved_epochs/"
         os.makedirs(dir_saved, exist_ok = True)
         generated_songs = self.G.forward_G(z.size(0), z)
         for i in range(0, generated_songs.size(0)):
-            np.save(dir_saved + "saved_song" + str(i) + ".npy", generated_songs[i])
+            np.save(dir_saved + "saved_song" + str(epoch) + str(i) + ".npy", generated_songs[i])
 
 
 T = Trainer()

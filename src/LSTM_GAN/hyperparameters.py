@@ -18,5 +18,5 @@ cuda = torch.cuda.is_available()
 DROPOUT_PROB = 0.4 # ???
 LSTM_LAYERS = 1 # 350?
 USE_ZEROS = False
-USE_FEATURE_MATCHING = True
+USE_FEATURE_MATCHING = False
 FM_DIV = 2
