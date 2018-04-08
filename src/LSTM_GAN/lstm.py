@@ -146,9 +146,7 @@ class Trainer():
         #change div here
         #real_songs = real_songs.reshape(real_songs.shape[0], int(real_songs.shape[0] / MINIBATCH_SIZE ), -1)
         #real_songs = torch.from_numpy(real_songs)
-        if cuda:
-            real_songs.cuda()
-
+        
         for i in range(0, TOT_EPOCHS):
             print("TOT_EPOCHS: " + str(i))
             real_song_nb = real_songs.shape[0]
