@@ -91,9 +91,16 @@ class Trainer():
                 generated_batch = generated_batch.cuda()
 
             # lstm input is (seq_index, batch_index, (network)input_index)
-            generated_prediction = self.D.forward_D(generated_batch.view(int(generated_batch.size(1) / SONG_PIECE_SIZE), generated_batch.size(0), -1))
+            generated_prediction = self.D.forward_D(generated_batch.view(int(generated_batch.size(1) / SONG_PIECE_SIZE), generated_batch.size(0), -1), USE_FEATURE_MATCHING)
 
-            loss_G = self.G.loss(generated_prediction.squeeze(), y_almost_ones)
+            if USE_FEATURE_MATCHING:
+                feature_real = self.D.forward_D(batch.detach(), USE_FEATURE_MATCHING)
+                feature_real = torch.mean(feature_real, 0)
+                feature_fake = torch.mean(generated_prediction, 0)
+                loss_G = self.G.loss(feature_fake, feature_real.detach())
+            else:
+                loss_G = self.G.loss(generated_prediction.squeeze(), y_almost_ones)
+
             loss_G.backward()
 
             predictions.append(generated_prediction.mean())
@@ -112,7 +119,7 @@ class Trainer():
         for k in range(0, D_STEPS):
             print("Training discriminator - k = "+str(k))
             self.D.zero_grad()
-            real_prediction = self.D.forward_D(batch)
+            real_prediction = self.D.forward_D(batch, False)
 
             z = Variable(self.create_noise_batch(current_batch_size)).view(current_batch_size, 1, -1)
             if cuda:
@@ -126,7 +133,7 @@ class Trainer():
 
             # lstm input is (seq_index, batch_index, (network)input_index)
             generated_batch = generated_batch.view(int(generated_batch.size(1) / SONG_PIECE_SIZE), generated_batch.size(0), -1)
-            generated_prediction = self.D.forward_D(generated_batch)
+            generated_prediction = self.D.forward_D(generated_batch, False)
 
             loss_d_f = self.D.loss(generated_prediction.squeeze(), y_almost_zeros)
             loss_total = loss_d_r + loss_d_f
@@ -139,7 +146,6 @@ class Trainer():
         return losses
 
     def train(self,real_songs):
-        # global index_list
         z_saved = Variable(self.create_noise_batch(5).view(5, 1, LATENT_DIMENSION))
         last_d_loss = 0
         last_g_loss = 0
