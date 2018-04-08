@@ -39,8 +39,8 @@ class LSTM_generator(nn.Module):
         return generated_batch
 
     def initHidden(self, current_batch_size):
-        return (Variable(torch.zeros(1, current_batch_size, self.HIDDEN_SIZE))
-                ,Variable(torch.zeros(1, current_batch_size,  self.HIDDEN_SIZE))) # (h_0, c_0)
+        return (Variable(torch.zeros(1 * self.lstm.num_layers, current_batch_size, self.HIDDEN_SIZE))
+                ,Variable(torch.zeros(1 * self.lstm.num_layers, current_batch_size,  self.HIDDEN_SIZE))) # (h_0, c_0)
 
 class LSTM_discriminator(nn.Module):
     def __init__(self, HIDDEN_SIZE):
@@ -64,5 +64,5 @@ class LSTM_discriminator(nn.Module):
         return output
 
     def initHidden(self):
-        return (Variable(torch.zeros(2, 13778, self.HIDDEN_SIZE)),#not sure why: maybe need alocation at beginning and fills afterwards all hidden outputs
-                Variable(torch.zeros(2, 13778, self.HIDDEN_SIZE)))# (h_0, c_0)
+        return (Variable(torch.zeros(2 * self.lstm.num_layers, 13778, self.HIDDEN_SIZE)),#not sure why: maybe need alocation at beginning and fills afterwards all hidden outputs
+                Variable(torch.zeros(2 * self.lstm.num_layers, 13778, self.HIDDEN_SIZE)))# (h_0, c_0)
