@@ -186,8 +186,6 @@ print("done")
 torch.save(T.G.state_dict(), "g_saved.pt")
 torch.save(T.D.state_dict(), "d_saved.pt")
 
-print(predictions.size())
-
 if SAVE:
     plt.plot(predictions, label="test")
     plt.savefig("predictions.png")

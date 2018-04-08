@@ -51,7 +51,7 @@ class LSTM_discriminator(nn.Module):
         self.final_layer = nn.Linear(self.HIDDEN_SIZE * 2, 1) # convert LSTM output to decision (bidirectional)
 
     def forward_D(self, input): # maybe a for in here
-        hidden = self.initHidden()
+        hidden = self.initHidden(input.size(0))
         if cuda:
             hidden =(hidden[0].cuda(), hidden[1].cuda())
 
@@ -63,6 +63,6 @@ class LSTM_discriminator(nn.Module):
         output = F.sigmoid(self.final_layer(output[output.size(0)-1,:,:])) # convert the output to the wanted dimension
         return output
 
-    def initHidden(self):
-        return (Variable(torch.zeros(2 * self.lstm.num_layers, 13778, self.HIDDEN_SIZE)),#not sure why: maybe need alocation at beginning and fills afterwards all hidden outputs
-                Variable(torch.zeros(2 * self.lstm.num_layers, 13778, self.HIDDEN_SIZE)))# (h_0, c_0)
+    def initHidden(self, number):
+        return (Variable(torch.zeros(2 * self.lstm.num_layers, number, self.HIDDEN_SIZE)),#not sure why: maybe need alocation at beginning and fills afterwards all hidden outputs
+                Variable(torch.zeros(2 * self.lstm.num_layers, number, self.HIDDEN_SIZE)))# (h_0, c_0)
