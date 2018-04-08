@@ -17,22 +17,24 @@ class LSTM_generator(nn.Module):
         self.final_layer = nn.Linear(self.HIDDEN_SIZE, SONG_PIECE_SIZE)
 
     def forward_G(self, current_batch_size, z): #maybe here if concatenated correctly all at one is good
-        print("forward G")
-        print(z.size())
         generated_batch = torch.zeros(current_batch_size, SONG_LENGTH)
         hidden = self.initHidden(current_batch_size)
         if cuda:
-            hidden = (hidden[0].cuda(), hidden[1].cuda())
+            for i in range(self.lstm.num_layers):
+                hidden[i] = hidden[i].cuda()
 
         generated_batch_temp = self.lstm.forward(z, hidden)[0][:,0,:]
         generated_batch[:,0:SONG_PIECE_SIZE] = self.final_layer(generated_batch_temp).data
-        zeros = Variable(torch.zeros(current_batch_size, 1, LATENT_DIMENSION)).type(torch.FloatTensor)
 
-        if cuda :
-            zeros = zeros.cuda()
+        input_net = z
+        if USE_ZEROS:
+            zeros = Variable(torch.zeros(current_batch_size, 1, LATENT_DIMENSION)).type(torch.FloatTensor)
+            if cuda:
+                zeros = zeros.cuda()
+            input_net = zeros
 
         for i in range(SONG_PIECE_SIZE, SONG_LENGTH, SONG_PIECE_SIZE):
-            generated_batch_temp, hidden = self.lstm.forward(zeros, hidden)
+            generated_batch_temp, hidden = self.lstm.forward(input_net, hidden)
             generated_batch_temp = self.final_layer(generated_batch_temp)
             generated_batch[:, i:i+SONG_PIECE_SIZE] = generated_batch_temp.data
 
@@ -53,13 +55,10 @@ class LSTM_discriminator(nn.Module):
     def forward_D(self, input): # maybe a for in here
         hidden = self.initHidden(input.size(0))
         if cuda:
-            hidden =(hidden[0].cuda(), hidden[1].cuda())
+            for i in range(self.lstm.num_layers * 2):
+                hidden[i] = hidden[i].cuda()
 
-        print(self.HIDDEN_SIZE)
-        print(input.size())
-        print(hidden[0].size())
         output, hiddens = self.lstm(input, hidden) # run through the LSTM
-        print(output.size())
         output = F.sigmoid(self.final_layer(output[output.size(0)-1,:,:])) # convert the output to the wanted dimension
         return output
 

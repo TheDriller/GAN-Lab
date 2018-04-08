@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as image
@@ -20,6 +19,7 @@ d_loss = []
 last_d_loss = 0
 last_g_loss = 0
 
+# load songs previously transformed into .npy form
 def load_real_songs():
     directory_str = "data/npy/"
     directory = os.fsencode(directory_str)
@@ -32,7 +32,9 @@ def load_real_songs():
             song_nb = song_nb - 1
 
     songs = np.zeros((song_nb,SONG_LENGTH))
-    print(song_nb)
+
+    print("training over : " + str(song_nb))
+
     i = 0
     for file in os.listdir(directory):
         filename = os.fsdecode(file)
@@ -43,6 +45,7 @@ def load_real_songs():
     np.random.shuffle(songs)
     return songs
 
+# create targets for the losses
 def get_targets(length):
     y_almost_ones = Variable(torch.from_numpy(np.random.uniform(0.8, 1.0, length)).type(torch.FloatTensor))
     if cuda:
@@ -51,11 +54,12 @@ def get_targets(length):
     y_almost_zeros = Variable(torch.from_numpy(np.random.uniform(0.0, 0.2, length)).type(torch.FloatTensor))
     if cuda:
         y_almost_zeros = y_almost_zeros.cuda()
-    return y_almost_ones,y_almost_zeros
+    return y_almost_ones, y_almost_zeros
 
 #Training
 class Trainer():
     def __init__(self):
+        # D and G with their optimiser
         self.D = LSTM_discriminator(HIDDEN_SIZE)
         if cuda:
             self.D.cuda()
@@ -73,7 +77,8 @@ class Trainer():
         losses = []
         y_almost_ones,y_almost_zeros = get_targets(current_batch_size)
 
-        for k in range(0, G_STEPS): # maybe add / remove training over MINIBATCH_SIZE
+        # train generator for G_Steps
+        for k in range(0, G_STEPS):
             print("Training generator - k = "+str(k))
 
             z = Variable(self.create_noise_batch(current_batch_size)).view(current_batch_size, 1, -1)
@@ -85,11 +90,10 @@ class Trainer():
             if cuda:
                 generated_batch = generated_batch.cuda()
 
-            print("generated")
+            # lstm input is (seq_index, batch_index, (network)input_index)
             generated_prediction = self.D.forward_D(generated_batch.view(int(generated_batch.size(1) / SONG_PIECE_SIZE), generated_batch.size(0), -1))
 
             loss_G = self.G.loss(generated_prediction.squeeze(), y_almost_ones)
-            # temp.append(loss_G.data)
             loss_G.backward()
 
             predictions.append(generated_prediction.mean())
@@ -103,13 +107,13 @@ class Trainer():
         losses = []
         y_almost_ones,y_almost_zeros = get_targets(batch.shape[1])
         current_batch_size = batch.shape[1]
+
+        #train discriminator for D_STEPS
         for k in range(0, D_STEPS):
             print("Training discriminator - k = "+str(k))
             self.D.zero_grad()
-            print("real prediction start")
             real_prediction = self.D.forward_D(batch)
 
-            print("generated batch start")
             z = Variable(self.create_noise_batch(current_batch_size)).view(current_batch_size, 1, -1)
             if cuda:
                 z = z.cuda()
@@ -120,9 +124,8 @@ class Trainer():
                 generated_batch = generated_batch.cuda()
             loss_d_r = self.D.loss(real_prediction.squeeze(), y_almost_ones)
 
-            print("generated prediction start")
+            # lstm input is (seq_index, batch_index, (network)input_index)
             generated_batch = generated_batch.view(int(generated_batch.size(1) / SONG_PIECE_SIZE), generated_batch.size(0), -1)
-            print(generated_batch.size())
             generated_prediction = self.D.forward_D(generated_batch)
 
             loss_d_f = self.D.loss(generated_prediction.squeeze(), y_almost_zeros)
@@ -137,54 +140,56 @@ class Trainer():
 
     def train(self,real_songs):
         # global index_list
-        z_saved = Variable(self.create_noise_batch(1).view(LATENT_DIMENSION, 1, -1))
+        z_saved = Variable(self.create_noise_batch(5).view(5, 1, LATENT_DIMENSION))
         last_d_loss = 0
         last_g_loss = 0
 
-        #LSTM all in one
-        print(real_songs.shape)
-        #change div here
-        #real_songs = real_songs.reshape(real_songs.shape[0], int(real_songs.shape[0] / MINIBATCH_SIZE ), -1)
-        #real_songs = torch.from_numpy(real_songs)
-        
         for i in range(0, TOT_EPOCHS):
             print("TOT_EPOCHS: " + str(i))
             real_song_nb = real_songs.shape[0]
 
             for batch_id in range(0,real_song_nb,MINIBATCH_SIZE):
                 print("Starting batch "+str(batch_id/MINIBATCH_SIZE))
+
                 batch = torch.from_numpy(real_songs[batch_id:batch_id+MINIBATCH_SIZE])
                 batch = batch.view(int(batch.shape[1] / SONG_PIECE_SIZE), batch.shape[0], -1)
                 batch = Variable(batch.float())
                 if cuda:
                     batch = batch.cuda()
+
                 current_batch_size = batch.shape[0]
-                print(batch.size())
 
                 # Train discriminator
                 discriminator_losses = self.train_discriminator(batch)
                 d_loss.append(np.mean(discriminator_losses))
 
-                print(current_batch_size + G_STEPS)
-
                 # Train generator
                 generator_losses = self.train_generator(batch)
 
                 g_loss.append(np.mean(generator_losses))
-                print("done G")
+
+            self.write_epoch_song(z_saved)
 
     def create_noise_batch(self, batch_size):
         G_in = np.random.normal(0.0, 1.0, [batch_size, LATENT_DIMENSION])
         return torch.from_numpy(G_in).type(torch.FloatTensor)
 
+    def write_epoch_song(self, z):
+        dir_saved = "data/saved_epochs/"
+        os.makedirs(dir_saved, exist_ok = True)
+        generated_songs = self.G.forward_G(z.size(0), z)
+        for i in range(0, generated_songs.size(0)):
+            np.save(dir_saved + "saved_song" + str(i) + ".npy", generated_songs[i])
+
+
 T = Trainer()
 real_songs = load_real_songs()
 T.train(real_songs)
 
-print("done")
-
 torch.save(T.G.state_dict(), "g_saved.pt")
 torch.save(T.D.state_dict(), "d_saved.pt")
+
+print("done")
 
 if SAVE:
     plt.plot(predictions, label="test")
