@@ -169,8 +169,11 @@ class Trainer():
         G_in = np.random.normal(0.0, 1.0, [batch_size, LATENT_DIMENSION])
         return torch.from_numpy(G_in).type(torch.FloatTensor)
 
+print("Let's begin!")
 T = Trainer()
+print("Start loading")
 real_songs = load_real_songs()
+print("Done loading - begin training")
 T.train(real_songs)
 
 print("done")
