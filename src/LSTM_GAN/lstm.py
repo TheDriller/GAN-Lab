@@ -31,9 +31,9 @@ def load_real_songs():
     for i, file in enumerate(files):
         data[i] = np.load(file)
 
-        dataset = datautils.TensorDataset(torch.from_numpy(data).type(torch.FloatTensor), torch.ones(data.shape))
+    dataset = datautils.TensorDataset(torch.from_numpy(data).type(torch.FloatTensor), torch.ones(data.shape))
 
-        train_loader = torch.utils.data.DataLoader(dataset, batch_size=MINIBATCH_SIZE, shuffle=True, num_workers=2)
+    train_loader = torch.utils.data.DataLoader(dataset, batch_size=MINIBATCH_SIZE, shuffle=True, num_workers=2)
     return train_loader
 
 
