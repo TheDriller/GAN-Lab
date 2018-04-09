@@ -140,7 +140,7 @@ class Trainer():
     def train(self,real_songs):
         z_saved = Variable(self.create_noise_batch(5).view(5, 1, LATENT_DIMENSION))
         if cuda:
-            z_saved.cuda()
+            z_saved = z_saved.cuda()
         last_d_loss = 0
         last_g_loss = 0
 
@@ -148,7 +148,7 @@ class Trainer():
             print("TOT_EPOCHS: " + str(i))
 
             for batch_id, (x, target) in enumerate(real_songs):
-                print("Starting batch "+str(batch_id/MINIBATCH_SIZE))
+                print("Starting batch "+str(batch_id))
 
                 batch = x
                 batch = batch.view(int(batch.shape[1] / SONG_PIECE_SIZE), batch.shape[0], -1)
