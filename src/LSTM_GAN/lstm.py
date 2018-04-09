@@ -180,23 +180,23 @@ class Trainer():
         for i in range(0, generated_songs.size(0)):
             np.save(dir_saved + "saved_song" + str(epoch) + str(i) + ".npy", generated_songs[i])
 
+if __name__ == '__main__':
+    T = Trainer()
+    real_songs = load_real_songs()
+    T.train(real_songs)
 
-T = Trainer()
-real_songs = load_real_songs()
-T.train(real_songs)
+    torch.save(T.G.state_dict(), "g_saved.pt")
+    torch.save(T.D.state_dict(), "d_saved.pt")
 
-torch.save(T.G.state_dict(), "g_saved.pt")
-torch.save(T.D.state_dict(), "d_saved.pt")
+    print("done")
 
-print("done")
+    if SAVE:
+        plt.plot(predictions, label="test")
+        plt.savefig("predictions.png")
+        plt.show()
 
-if SAVE:
-    plt.plot(predictions, label="test")
-    plt.savefig("predictions.png")
-    plt.show()
-
-    plt.plot(d_loss, label="d_loss")
-    plt.plot(g_loss, label="g_loss")
-    plt.legend(loc="best")
-    plt.savefig("loss.png")
-    plt.show()
+        plt.plot(d_loss, label="d_loss")
+        plt.plot(g_loss, label="g_loss")
+        plt.legend(loc="best")
+        plt.savefig("loss.png")
+        plt.show()
