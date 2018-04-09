@@ -61,18 +61,20 @@ class LSTM_discriminator(nn.Module):
 
         if use_fm:
             input = input[0:int(input.size(0) / FM_DIV),:,:]
-            output, hiddens = self.lstm(input, hidden)
-            return output[output.size(0)-1,:,:]
+            for i in range(0, int(SONG_LENGTH / SONG_PIECE_SIZE)):
+                output, hidden = self.lstm(input[i,:,:].view(1, input.size(1), input.size(2)), hidden)
+                return output
 
-        output, hiddens = self.lstm(input, hidden) # run through the LSTM
-        output = F.sigmoid(self.final_layer(output[output.size(0)-1,:,:])) # convert the output to the wanted dimension
-        return output
+        for i in range(0, int(SONG_LENGTH / SONG_PIECE_SIZE)):
+            output, hiddens = self.lstm(input[i,:,:].view(1, input.size(1), input.size(2)), hidden) # run through the LSTM
+            output = F.sigmoid(self.final_layer(output)) # convert the output to the wanted dimension
+            return output
 
     def initHidden(self, number, use_fm):
         #not sure why: maybe need alocation at beginning and fills afterwards all hidden outputs
         if use_fm:
-            return (Variable(torch.zeros(2 * self.lstm.num_layers, int(number / FM_DIV), self.HIDDEN_SIZE)),
-                    Variable(torch.zeros(2 * self.lstm.num_layers, int(number / FM_DIV), self.HIDDEN_SIZE)))# (h_0, c_0)
+            return (Variable(torch.zeros(2 * self.lstm.num_layers, 1, self.HIDDEN_SIZE)),
+                    Variable(torch.zeros(2 * self.lstm.num_layers, 1, self.HIDDEN_SIZE)))# (h_0, c_0)
         else:
-            return (Variable(torch.zeros(2 * self.lstm.num_layers, number, self.HIDDEN_SIZE)),
-                    Variable(torch.zeros(2 * self.lstm.num_layers, number, self.HIDDEN_SIZE)))# (h_0, c_0)
+            return (Variable(torch.zeros(2 * self.lstm.num_layers, 1, self.HIDDEN_SIZE)),
+                    Variable(torch.zeros(2 * self.lstm.num_layers, 1, self.HIDDEN_SIZE)))# (h_0, c_0)
