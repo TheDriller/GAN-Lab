@@ -3,15 +3,15 @@ D_steps = 1
 G_steps = 1
 nb_epoch = 100
 
-model_complexity = 64
+model_complexity = 128
 
 G_inputs = 100
 
 image_x = 64
 image_y = 64
 
-minibatch_size = 8
-nb_images_to_use = 1000
+minibatch_size = 128
+nb_images_to_use = 100000
 train_size = 1 # ???
 
 lr = 0.0002
