@@ -9,9 +9,12 @@ from torch.autograd import Variable
 from models import *
 from hyperparameters import *
 import os
+import glob
 
 import torchvision.datasets as dset
 import torchvision.transforms as transforms
+
+import torch.utils.data as datautils
 
 predictions = []
 g_loss = []
@@ -22,28 +25,17 @@ last_g_loss = 0
 # load songs previously transformed into .npy form
 def load_real_songs():
     directory_str = "data/npy/"
-    directory = os.fsencode(directory_str)
-    song_nb = len([name for name in os.listdir(directory) if os.path.isfile(os.path.join(directory, name))])
+    files = glob.glob(directory_str + "*.npy")
+    data = np.ndarray((len(files), SONG_LENGTH))
 
-    #temporary fix for DS_STORE problem
-    for file in os.listdir(directory):
-        filename = os.fsdecode(file)
-        if filename.endswith(".DS_STORE"):
-            song_nb = song_nb - 1
+    for i, file in enumerate(files):
+        data[i] = np.load(file)
 
-    songs = np.zeros((song_nb,SONG_LENGTH))
+        dataset = datautils.TensorDataset(torch.from_numpy(data).type(torch.FloatTensor), torch.ones(data.shape))
 
-    print("training over : " + str(song_nb))
+        train_loader = torch.utils.data.DataLoader(dataset, batch_size=MINIBATCH_SIZE, shuffle=True, num_workers=2)
+    return train_loader
 
-    i = 0
-    for file in os.listdir(directory):
-        filename = os.fsdecode(file)
-        if filename.endswith(".npy"):
-            filepath = directory_str + filename
-            songs[i,:] = np.load(filepath)
-            i = i+1
-    np.random.shuffle(songs)
-    return songs
 
 # create targets for the losses
 def get_targets(length):
@@ -147,17 +139,18 @@ class Trainer():
 
     def train(self,real_songs):
         z_saved = Variable(self.create_noise_batch(5).view(5, 1, LATENT_DIMENSION))
+        if cuda:
+            z_saved.cuda()
         last_d_loss = 0
         last_g_loss = 0
 
         for i in range(0, TOT_EPOCHS):
             print("TOT_EPOCHS: " + str(i))
-            real_song_nb = real_songs.shape[0]
 
-            for batch_id in range(0,real_song_nb,MINIBATCH_SIZE):
+            for batch_id, (x, target) in enumerate(real_songs):
                 print("Starting batch "+str(batch_id/MINIBATCH_SIZE))
 
-                batch = torch.from_numpy(real_songs[batch_id:batch_id+MINIBATCH_SIZE])
+                batch = x
                 batch = batch.view(int(batch.shape[1] / SONG_PIECE_SIZE), batch.shape[0], -1)
                 batch = Variable(batch.float())
                 if cuda:
