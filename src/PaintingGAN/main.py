@@ -149,6 +149,7 @@ class Trainer():
 
             self.write_image(e)
             self.create_plots()
+            self.save_models()
 
     def write_image(self, e):
         # Write generated image
@@ -201,8 +202,8 @@ class Trainer():
 
 def main():
     # Create trainer and load data
-    T = Trainer(save_path="cubism_data_results/")
-    T.load_dataset(path_to_images = "cubism_data")
+    T = Trainer(save_path="impressionism_data_results/")
+    T.load_dataset(path_to_images = "impressionism_data")
     # Save hyperparameter config
     from shutil import copyfile
     os.makedirs(T.save_path, exist_ok = True)

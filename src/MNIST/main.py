@@ -17,7 +17,7 @@ import torchvision.transforms as transforms
 
 #Training
 class Trainer():
-    def __init__(self, output_results = True):
+    def __init__(self, save_path = "results/", output_results = True):
         self.cuda = torch.cuda.is_available()
 
         # Models
@@ -33,8 +33,9 @@ class Trainer():
         self.G_optimiser = optim.Adam(self.G.parameters(), lr = lr, betas = (beta1, beta2))
 
         # Variables to create plots and images
+        self.save_path = save_path
         self.output_results = output_results
-        self.nb_image_to_generate = 10
+        self.nb_image_to_generate = 5
         self.predictions = []
         self.g_losses = []
         self.d_losses = []
@@ -55,12 +56,11 @@ class Trainer():
 
             # Start loop for each minibatch
             for batch_idx, (x, target) in enumerate(self.train_loader):
-
+                
                 current_batch_size = x.shape[0]
 
-                if batch_idx * minibatch_size > nb_images_to_use:
-                    print("Stopped at batch : " + str(batch_idx) + " with batch size of " + str(minibatch_size))
-                    break
+                #if batch_idx > 20:
+                #    break
 
                 # Useful variables for training
                 x = Variable(x)
@@ -89,7 +89,6 @@ class Trainer():
                         z = z.view(-1, G_inputs, 1, 1)
                     if self.cuda:
                         z = z.cuda()
-
                     # Train on real data
                     real_prediction = self.D(x).squeeze() # 1x1
                     loss_d_r = self.D.loss(real_prediction, y_almost_ones)
@@ -148,17 +147,11 @@ class Trainer():
             self.write_image(e)
             self.create_plots()
 
-
     def write_image(self, e):
-        # Different name for conv nets
-        prefix = ""
-        if isinstance(self.G, G_conv):
-            prefix = "conv_"
-
         # Write generated image
         image_temp = self.G(self.z_saved).view(1, image_x * self.nb_image_to_generate, image_y)
-        os.makedirs("results", exist_ok = True)
-        image.imsave("results/" + prefix + "gen_epoch_" + str(e) + ".png", image_temp[0].data)
+        image.imsave(self.save_path + "gen_epoch_" + str(e) + ".png", image_temp[0].data, cmap='gray')
+
 
     def create_plots(self):
         # Different name for conv nets
@@ -170,7 +163,7 @@ class Trainer():
         plt.plot(self.predictions)
         plt.xlabel("Epoch")
         plt.ylabel("Discriminator prediction")
-        plt.savefig("results/" + prefix + "predictions.png")
+        plt.savefig(self.save_path + "" + prefix + "predictions.png")
 
         plt.clf()
 
@@ -180,7 +173,7 @@ class Trainer():
         plt.legend(loc="best")
         plt.xlabel("Epoch")
         plt.ylabel("Loss")
-        plt.savefig("results/" + prefix + "losses.png")
+        plt.savefig(self.save_path + "" + prefix + "losses.png")
 
         plt.clf()
 
@@ -202,11 +195,23 @@ class Trainer():
 
     def save_models(self):
         # Save trained models to disk
-        torch.save(self.G.state_dict(), "results/g_saved.pt")
-        torch.save(self.D.state_dict(), "results/d_saved.pt")
+        torch.save(self.G.state_dict(), self.save_path + "g_saved.pt")
+        torch.save(self.D.state_dict(), self.save_path + "d_saved.pt")
 
 
-T = Trainer()
-T.load_mnist()
-T.train()
-T.save_models()
+def main():
+    # Create trainer and load data
+    T = Trainer(save_path="results/")
+    T.load_mnist()
+    # Save hyperparameter config
+    from shutil import copyfile
+    os.makedirs(T.save_path, exist_ok = True)
+    copyfile("hyperparameters.py", T.save_path + "hyperparameters.py")
+    # Start training
+    T.train()
+    # Save trained models
+    T.save_models()
+
+if __name__ == "__main__":
+    main()
+
