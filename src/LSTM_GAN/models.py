@@ -23,7 +23,7 @@ class LSTM_generator(nn.Module):
         generated_batch = torch.zeros(current_batch_size, SONG_LENGTH)
         hidden = self.initHidden(current_batch_size)
         if cuda:
-            hidden[0], hidden[1] = (hidden[0].cuda(), hidden[1].cuda())
+            hidden = (hidden[0].cuda(), hidden[1].cuda())
 
         generated_batch_temp = self.lstm.forward(z, hidden)[0][:,0,:]
         generated_batch[:,0:SONG_PIECE_SIZE] = self.final_layer(generated_batch_temp).data
@@ -57,7 +57,7 @@ class LSTM_discriminator(nn.Module):
     def forward_D(self, input, use_fm): # maybe a for in here
         hidden = self.initHidden(input.size(0), use_fm)
         if cuda:
-            hidden[0], hidden[1] = (hidden[0].cuda(), hidden[1].cuda())
+            hidden = (hidden[0].cuda(), hidden[1].cuda())
 
         if use_fm:
             input = input[0:int(input.size(0) / FM_DIV),:,:]
