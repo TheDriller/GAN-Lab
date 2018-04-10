@@ -29,26 +29,26 @@ class Trainer():
             self.G.cuda()
 
         # Optimizers
-        self.D_optimiser = optim.Adam(self.D.parameters(), lr = lr, betas = (beta1, beta2))
-        self.G_optimiser = optim.Adam(self.G.parameters(), lr = lr, betas = (beta1, beta2))
+        self.D_optimiser = optim.Adam(self.D.parameters(), lr = LR, betas = (BETA1, BETA2))
+        self.G_optimiser = optim.Adam(self.G.parameters(), lr = LR, betas = (BETA1, BETA2))
 
         # Variables to create plots and images
         self.save_path = save_path
         self.output_results = output_results
-        self.nb_image_to_generate = 5
+        self.nb_image_to_generate = IMAGES_TO_GENERATE
         self.predictions = []
         self.g_losses = []
         self.d_losses = []
-        self.z_saved = Variable(torch.randn((self.nb_image_to_generate, G_inputs)))
+        self.z_saved = Variable(torch.randn((self.nb_image_to_generate, G_INPUTS)))
         if isinstance(self.G, G_conv):
-            self.z_saved = self.z_saved.view(-1, G_inputs, 1, 1)
+            self.z_saved = self.z_saved.view(-1, G_INPUTS, 1, 1)
         if self.cuda:
             self.z_saved = self.z_saved.cuda()
 
     def train(self):
-        
+
         # Start loop for each epoch
-        for e in range(0, nb_epoch):
+        for e in range(0, NB_EPOCH):
             print("Epoch: " + str(e))
             g_loss = []
             d_loss = []
@@ -56,11 +56,11 @@ class Trainer():
 
             # Start loop for each minibatch
             for batch_idx, (x, target) in enumerate(self.train_loader):
-                
                 current_batch_size = x.shape[0]
 
                 # Remove useless channels
-                x = x[:,1,:,:].contiguous().view(current_batch_size, 1, image_x, image_y)
+                if not COLOR:
+                    x = x[:,1,:,:].contiguous().view(current_batch_size, 1, IMAGE_X, IMAGE_Y)
 
                 #if batch_idx > 20:
                 #    break
@@ -68,7 +68,7 @@ class Trainer():
                 # Useful variables for training
                 x = Variable(x)
                 if isinstance(self.G, G):
-                    x = x.view(-1, image_x * image_y)
+                    x = x.view(-1, NB_CHANNELS, IMAGE_X * IMAGE_Y)
                 if self.cuda:
                     x = x.cuda()
 
@@ -82,14 +82,14 @@ class Trainer():
 
                 temp_loss = []
 
-                for k in range(0, D_steps):
+                for k in range(0, D_STEPS):
                     # Train discrimator
                     self.D.zero_grad()
 
                     # Generate noise
-                    z = Variable(torch.randn((current_batch_size, G_inputs)))
+                    z = Variable(torch.randn((current_batch_size, G_INPUTS)))
                     if isinstance(self.G, G_conv):
-                        z = z.view(-1, G_inputs, 1, 1)
+                        z = z.view(-1, G_INPUTS, 1, 1)
                     if self.cuda:
                         z = z.cuda()
                     # Train on real data
@@ -115,14 +115,14 @@ class Trainer():
                 temp_loss = []
                 temp_prediction = []
 
-                for k in range(0, G_steps):
+                for k in range(0, G_STEPS):
                     # Train generator
                     self.G.zero_grad()
 
                     # Generate noise
-                    z = Variable(torch.randn((current_batch_size, G_inputs)))
+                    z = Variable(torch.randn((current_batch_size, G_INPUTS)))
                     if isinstance(self.G, G_conv):
-                        z = z.view(-1, G_inputs, 1, 1)
+                        z = z.view(-1, G_INPUTS, 1, 1)
                     if self.cuda:
                         z = z.cuda()
 
@@ -135,26 +135,32 @@ class Trainer():
                     # Backprop
                     loss_G.backward()
                     self.G_optimiser.step()
-                    
+
                     # Keep track of loss and prediction
                     temp_loss.append(loss_G.data)
                     temp_prediction.append(D_prediction.mean().data)
-    
+
                 pred.append(np.mean(temp_prediction))
                 g_loss.append(np.mean(temp_loss))
-            
+
             self.predictions.append(np.mean(pred))
             self.d_losses.append(np.mean(d_loss))
             self.g_losses.append(np.mean(g_loss))
 
             self.write_image(e)
-            self.create_plots()
+            if (CAN_USE_PLT):
+                self.create_plots()
             self.save_models()
 
     def write_image(self, e):
         # Write generated image
-        image_temp = self.G(self.z_saved).view(1, image_x * self.nb_image_to_generate, image_y)
-        image.imsave(self.save_path + "gen_epoch_" + str(e) + ".png", image_temp[0].data, cmap='gray')
+        if COLOR :
+            image_temp = self.G(self.z_saved).view(IMAGE_X * self.nb_image_to_generate, IMAGE_Y, NB_CHANNELS)
+            max_value = image_temp.min()
+            image.imsave(self.save_path + "gen_epoch_" + str(e) + ".png", image_temp.data)
+        else:
+            image_temp = self.G(self.z_saved).view(IMAGE_X * self.nb_image_to_generate, IMAGE_Y)
+            image.imsave(self.save_path + "gen_epoch_" + str(e) + ".png", image_temp.data, cmap='gray')
 
 
     def create_plots(self):
@@ -192,7 +198,7 @@ class Trainer():
 
         trainset = dset.ImageFolder(root = path_to_images,transform=transform)
 
-        self.train_loader = torch.utils.data.DataLoader(trainset, batch_size=minibatch_size, shuffle=True, num_workers=2)
+        self.train_loader = torch.utils.data.DataLoader(trainset, batch_size=MINIBATCH_SIZE, shuffle=True, num_workers=2)
 
     def save_models(self):
         # Save trained models to disk
@@ -202,8 +208,12 @@ class Trainer():
 
 def main():
     # Create trainer and load data
-    T = Trainer(save_path="impressionism_data_results/")
-    T.load_dataset(path_to_images = "impressionism_data")
+    if COLOR :
+        T = Trainer(save_path=DATASET+"_results_color/")
+        T.load_dataset(path_to_images = "color/"+DATASET+"_data")
+    else:
+        T = Trainer(save_path=DATASET+"_results_greyscale/")
+        T.load_dataset(path_to_images = "greyscale/"+DATASET+"_data")
     # Save hyperparameter config
     from shutil import copyfile
     os.makedirs(T.save_path, exist_ok = True)
@@ -215,4 +225,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

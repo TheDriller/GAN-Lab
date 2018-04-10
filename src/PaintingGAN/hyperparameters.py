@@ -1,24 +1,37 @@
 # hyperparameters
-D_steps = 1
-G_steps = 1
-nb_epoch = 100
+D_STEPS = 10
+G_STEPS = 5
+NB_EPOCH = 50
+IMAGES_TO_GENERATE = 5
+MODEL_COMPLEXITY = 64
 
-model_complexity = 256
+LATENT_DIMENSION = 100
+G_INPUTS = LATENT_DIMENSION
 
-G_inputs = 1000
+IMAGE_X = 128
+IMAGE_Y = 128
 
-image_x = 128
-image_y = 128
+MINIBATCH_SIZE = 16
+# TRAIN_SIZE = 1 # ???
 
-minibatch_size = 16
-train_size = 1 # ???
+LR = 0.0002
+LEAK  = 0.2
+BETA1  = 0.5
+BETA2 = 0.999
+MEAN = 0.0
+STD = 0.02
 
-lr = 0.0002
-leak = 0.2
-beta1 = 0.5
-beta2 = 0.999
-mean = 0.0
-std = 0.02
+COLOR = 1
+
+if COLOR:
+    NB_CHANNELS = 3
+else:
+    NB_CHANNELS = 1
 
 
-save = True
+
+CAN_USE_PLT = 1
+
+DATASET = "abstract"
+
+SAVE = True
