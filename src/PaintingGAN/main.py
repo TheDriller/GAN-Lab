@@ -80,6 +80,8 @@ class Trainer():
 
                 temp_loss = []
                 x = self.pack(x.data)
+                if self.cuda:
+                    x = x.cuda()
 
                 for k in range(0, D_steps):
                     # Train discrimator
@@ -99,6 +101,8 @@ class Trainer():
                     # Train on generated data
                     generated_batch = self.G(z)
                     generated_batch = self.pack(generated_batch.data)
+                    if self.cuda:
+                        generated_batch = generated_batch.cuda()
                     generated_prediction = self.D(generated_batch).squeeze() # 1x1
                     loss_d_f = self.D.loss(generated_prediction, y_almost_zeros)
 
@@ -129,6 +133,8 @@ class Trainer():
 
                     generated_batch = self.G(z)
                     generated_batch = self.pack(generated_batch.data)
+                    if self.cuda:
+                        generated_batch = generated_batch.cuda()
 
                     # Train generator with predictions from the discrimator
                     D_prediction = self.D(generated_batch).squeeze() # 1x1
