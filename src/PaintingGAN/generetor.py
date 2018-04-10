@@ -19,7 +19,7 @@ def create_noise_batch():
     return torch.from_numpy(G_in).type(torch.FloatTensor)
 
 generator = G_conv()
-generator.load_state_dict(torch.load("g_saved.pt"))
+generator.load_state_dict(torch.load("g_saved.pt")) #CHANGE NAME
 generator.eval()
 
 noise_batch = create_noise_batch()
