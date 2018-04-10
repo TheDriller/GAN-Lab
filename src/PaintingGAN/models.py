@@ -17,7 +17,7 @@ class G(nn.Module):
         out = F.leaky_relu(self.fc1(input), LEAK)
         out = F.leaky_relu(self.fc2(out), LEAK)
         out = F.leaky_relu(self.fc3(out), LEAK)
-        out = F.sigmoid(self.fc4(out))
+        out = F.tanh(self.fc4(out))
         return out
 
 class D(nn.Module):
@@ -68,7 +68,7 @@ class G_conv(nn.Module):
         x = F.relu(self.deconv3_bn(self.deconv3(x)))
         x = F.relu(self.deconv4_bn(self.deconv4(x)))
         x = F.relu(self.deconv5_bn(self.deconv5(x)))
-        x = F.sigmoid(self.deconv6(x))
+        x = F.tanh(self.deconv6(x))
 
         return x
 

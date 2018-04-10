@@ -14,6 +14,10 @@ import os
 import torchvision.datasets as dset
 import torchvision.transforms as transforms
 
+def rescale_for_rgb_plot(images):
+    min_val = images.data.min()
+    max_val = images.data.max()
+    return (images.data-min_val)/(max_val-min_val)
 
 #Training
 class Trainer():
@@ -67,6 +71,7 @@ class Trainer():
 
                 # Useful variables for training
                 x = Variable(x)
+
                 if isinstance(self.G, G):
                     x = x.view(-1, NB_CHANNELS, IMAGE_X * IMAGE_Y)
                 if self.cuda:
@@ -156,8 +161,8 @@ class Trainer():
         # Write generated image
         if COLOR :
             image_temp = self.G(self.z_saved).view(IMAGE_X * self.nb_image_to_generate, IMAGE_Y, NB_CHANNELS)
-            max_value = image_temp.min()
-            image.imsave(self.save_path + "gen_epoch_" + str(e) + ".png", image_temp.data)
+            image_temp = rescale_for_rgb_plot(image_temp)
+            image.imsave(self.save_path + "gen_epoch_" + str(e) + ".png", image_temp)
         else:
             image_temp = self.G(self.z_saved).view(IMAGE_X * self.nb_image_to_generate, IMAGE_Y)
             image.imsave(self.save_path + "gen_epoch_" + str(e) + ".png", image_temp.data, cmap='gray')
