@@ -1,11 +1,11 @@
 # hyperparameters
-D_steps = 1
-G_steps = 1
-nb_epoch = 100
+D_steps = 4
+G_steps = 4
+nb_epoch = 2
 
-model_complexity = 256
+model_complexity = 4
 
-G_inputs = 1000
+G_inputs = 100
 
 image_x = 128
 image_y = 128
@@ -22,3 +22,5 @@ std = 0.02
 
 
 save = True
+
+packing = 3

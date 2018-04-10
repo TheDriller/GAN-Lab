@@ -46,7 +46,6 @@ class Trainer():
             self.z_saved = self.z_saved.cuda()
 
     def train(self):
-        
         # Start loop for each epoch
         for e in range(0, nb_epoch):
             print("Epoch: " + str(e))
@@ -56,7 +55,6 @@ class Trainer():
 
             # Start loop for each minibatch
             for batch_idx, (x, target) in enumerate(self.train_loader):
-                
                 current_batch_size = x.shape[0]
 
                 # Remove useless channels
@@ -72,15 +70,16 @@ class Trainer():
                 if self.cuda:
                     x = x.cuda()
 
-                y_almost_ones = Variable(torch.ones(current_batch_size))
+                y_almost_ones = Variable(torch.ones(int((current_batch_size-1) / packing + 1)))
                 if self.cuda:
                     y_almost_ones = y_almost_ones.cuda()
 
-                y_almost_zeros = Variable(torch.zeros(current_batch_size))
+                y_almost_zeros = Variable(torch.zeros(int((current_batch_size-1) / packing + 1)))
                 if self.cuda:
                     y_almost_zeros = y_almost_zeros.cuda()
 
                 temp_loss = []
+                x = self.pack(x.data)
 
                 for k in range(0, D_steps):
                     # Train discrimator
@@ -93,11 +92,13 @@ class Trainer():
                     if self.cuda:
                         z = z.cuda()
                     # Train on real data
+
                     real_prediction = self.D(x).squeeze() # 1x1
                     loss_d_r = self.D.loss(real_prediction, y_almost_ones)
 
                     # Train on generated data
                     generated_batch = self.G(z)
+                    generated_batch = self.pack(generated_batch.data)
                     generated_prediction = self.D(generated_batch).squeeze() # 1x1
                     loss_d_f = self.D.loss(generated_prediction, y_almost_zeros)
 
@@ -127,6 +128,7 @@ class Trainer():
                         z = z.cuda()
 
                     generated_batch = self.G(z)
+                    generated_batch = self.pack(generated_batch.data)
 
                     # Train generator with predictions from the discrimator
                     D_prediction = self.D(generated_batch).squeeze() # 1x1
@@ -135,14 +137,14 @@ class Trainer():
                     # Backprop
                     loss_G.backward()
                     self.G_optimiser.step()
-                    
+
                     # Keep track of loss and prediction
                     temp_loss.append(loss_G.data)
                     temp_prediction.append(D_prediction.mean().data)
-    
+
                 pred.append(np.mean(temp_prediction))
                 g_loss.append(np.mean(temp_loss))
-            
+
             self.predictions.append(np.mean(pred))
             self.d_losses.append(np.mean(d_loss))
             self.g_losses.append(np.mean(g_loss))
@@ -198,6 +200,19 @@ class Trainer():
         # Save trained models to disk
         torch.save(self.G.state_dict(), self.save_path + "g_saved.pt")
         torch.save(self.D.state_dict(), self.save_path + "d_saved.pt")
+
+    # inspired from https://arxiv.org/pdf/1712.04086.pdf
+    def pack(self, x):
+        packed = torch.zeros(int((x.size(0) - 1) / packing) + 1, packing, x.size(2), x.size(3))
+
+        for i in range(0, packed.size(0)):
+            for j in range(0, packing):
+                if(i * packing + j < packed.size(0)):
+                    packed[i,j,:,:] = x[i * packing + j, 0]
+                else:
+                    packed[i,j,:,:] = x[i * packing, 0]
+
+        return Variable(packed)
 
 
 def main():

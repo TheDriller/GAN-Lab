@@ -84,7 +84,7 @@ class D_conv(nn.Module):
     def __init__(self):
         super(D_conv, self).__init__()
         self.loss = nn.BCELoss()
-        self.conv1 = nn.Conv2d(1, 1 * model_complexity, 4, 2, 1)
+        self.conv1 = nn.Conv2d(packing, 1 * model_complexity, 4, 2, 1)
         self.conv2 = nn.Conv2d(1 * model_complexity, 2 * model_complexity, 4, 2, 1)
         self.conv2_bn = nn.BatchNorm2d(2 * model_complexity)
         self.conv22 = nn.Conv2d(2 * model_complexity, 2 * model_complexity, 4, 2, 1)
