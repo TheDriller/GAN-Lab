@@ -221,7 +221,7 @@ class Trainer():
 
     # inspired from https://arxiv.org/pdf/1712.04086.pdf
     def pack(self, x):
-        packed = torch.zeros(int((x.size(0) - 1) / packing) + 1, packing, x.size(2), x.size(3))
+        packed = torch.zeros(int((x.size(0) - 1) / packing) + 1, packing * NB_CHANNELS, x.size(2), x.size(3))
 
         for i in range(0, packed.size(0)):
             for j in range(0, packing):
