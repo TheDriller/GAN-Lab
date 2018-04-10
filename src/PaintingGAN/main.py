@@ -19,6 +19,10 @@ def rescale_for_rgb_plot(images):
     max_val = images.data.max()
     return (images.data-min_val)/(max_val-min_val)
 
+LOAD_MODELS = False
+G_MODEL_PATH = ""
+D_MODEL_PATH = ""
+
 #Training
 class Trainer():
     def __init__(self, save_path = "results/", output_results = True):
@@ -28,6 +32,7 @@ class Trainer():
         self.D = D_conv()
         if self.cuda:
             self.D.cuda()
+
         self.G = G_conv()
         if self.cuda:
             self.G.cuda()
@@ -35,6 +40,16 @@ class Trainer():
         # Optimizers
         self.D_optimiser = optim.Adam(self.D.parameters(), lr = LR, betas = (BETA1, BETA2))
         self.G_optimiser = optim.Adam(self.G.parameters(), lr = LR, betas = (BETA1, BETA2))
+
+        # When starting from an already trained model
+        if LOAD_MODELS :
+            D_checkpoint = torch.load(D_MODEL_PATH)
+            self.D.load_state_dict(D_checkpoint['state_dict'])
+            self.D_optimiser.load_state_dict(D_checkpoint['optimizer'])
+
+            G_checkpoint = torch.load(G_MODEL_PATH)
+            self.G.load_state_dict(G_checkpoint['state_dict'])
+            self.G_optimiser.load_state_dict(G_checkpoint['optimizer'])
 
         # Variables to create plots and images
         self.save_path = save_path
@@ -155,7 +170,10 @@ class Trainer():
             self.write_image(e)
             if (CAN_USE_PLT):
                 self.create_plots()
-            self.save_models()
+
+            save_models(epoch, G, D)
+
+            #SAVE MODELS :
 
     def write_image(self, e):
         # Write generated image
@@ -205,10 +223,22 @@ class Trainer():
 
         self.train_loader = torch.utils.data.DataLoader(trainset, batch_size=MINIBATCH_SIZE, shuffle=True, num_workers=2)
 
-    def save_models(self):
-        # Save trained models to disk
-        torch.save(self.G.state_dict(), self.save_path + "g_saved.pt")
-        torch.save(self.D.state_dict(), self.save_path + "d_saved.pt")
+    def save_model(state, modelname):
+        # Save trained model to disk with epoch/optimizer/model state
+        torch.save(state, self.save_path + "epoch" + str(state.epoch) + "_" + modelname)
+
+    def save_models(epoch, G, D):
+        save_model({
+        'epoch': epoch + 1,
+        'state_dict': D.model.state_dict(),
+        'optimizer' : D.optimizer.state_dict()
+        }, "D_model")
+
+        save_model({
+        'epoch': epoch + 1,
+        'state_dict': G.model.state_dict(),
+        'optimizer' : G.optimizer.state_dict()
+        }, "G_model")
 
 
 def main():
