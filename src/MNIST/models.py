@@ -39,84 +39,13 @@ class D(nn.Module):
         out = F.sigmoid(self.fc4(out))
         return out
 
-class D_conv2(nn.Module):
-    def __init__(self):
-        super(D_conv2, self).__init__()
-        self.loss = nn.BCELoss()
-
-        self.conv1 = nn.Conv2d(1, 2 * model_complexity, 3, padding=1)
-        self.bn1 = nn.BatchNorm2d(2 * model_complexity)
-        self.layer1 = nn.Sequential(self.conv1, self.bn1)
-
-        self.conv2 = nn.Conv2d(2 * model_complexity, 4 * model_complexity, 3, padding=1)
-        self.bn2 = nn.BatchNorm2d(4 * model_complexity)
-        self.layer2 = nn.Sequential(self.conv2, self.bn2)
-
-        self.conv3 = nn.Conv2d(4 * model_complexity, 8 * model_complexity, 3, padding=1)
-        self.bn3 = nn.BatchNorm2d(8 * model_complexity)
-        self.layer3 = nn.Sequential(self.conv3, self.bn3)
-        
-        self.conv4 = nn.Conv2d(8 * model_complexity, 16 * model_complexity, 3, padding=1)
-        self.bn4 = nn.BatchNorm2d(16 * model_complexity)
-        self.layer4 = nn.Sequential(self.conv4, self.bn4)
-
-        self.fully = nn.Linear(16 * image_x * image_y * model_complexity, 1)
-        self.weights_init(mean, std)
-
-    def weights_init(self, mean, std):
-        weights_init_general(self, mean, std)
-
-    def forward(self, x):
-        out = F.leaky_relu(self.layer1(x), leak)
-        out = F.leaky_relu(self.layer2(out), leak)
-        out = F.leaky_relu(self.layer3(out), leak)
-        out = F.leaky_relu(self.layer4(out), leak)
-        out = out.view(out.size(0), -1)
-        out = F.sigmoid(self.fully(out))
-        return out
-
-class G_conv2(nn.Module):
-    def __init__(self):
-        super(G_conv2, self).__init__()
-        self.loss = nn.BCELoss()
-
-        self.conv1 = nn.ConvTranspose2d(G_inputs, 8 * model_complexity, 5, padding=1, stride=1)
-        self.bn1 = nn.BatchNorm2d(8 * model_complexity)
-        self.layer1 = nn.Sequential(self.conv1, self.bn1)
-
-        self.conv2 = nn.ConvTranspose2d(8 * model_complexity, 4 * model_complexity, 5, padding=1, stride=2)
-        self.bn2 = nn.BatchNorm2d(4 * model_complexity)
-        self.layer2 = nn.Sequential(self.conv2, self.bn2)
-
-        self.conv3 = nn.ConvTranspose2d(4 * model_complexity, 2 * model_complexity, 4, padding=1, stride=2)
-        self.bn3 = nn.BatchNorm2d(2 * model_complexity)
-        self.layer3 = nn.Sequential(self.conv3, self.bn3)
-
-        self.conv4 = nn.ConvTranspose2d(2 * model_complexity, 1 * model_complexity, 3, padding=1, stride=1)
-        self.bn4 = nn.BatchNorm2d(1 * model_complexity)
-        self.layer4 = nn.Sequential(self.conv4, self.bn4)
-
-        self.deconv5 = nn.ConvTranspose2d(1 * model_complexity, 1, 4, padding=1, stride=2)
-        self.weights_init(mean, std)
-
-    def weights_init(self, mean, std):
-        weights_init_general(self, mean, std)
-
-    def forward(self, x):
-        out = F.relu(self.layer1(x))
-        out = F.relu(self.layer2(out))
-        out = F.relu(self.layer3(out))
-        out = F.relu(self.layer4(out))
-        out = F.tanh(self.deconv5(out))
-        return out
-
     
 class G_conv(nn.Module):
     # initializers
     def __init__(self):
         super(G_conv, self).__init__()
         self.loss = nn.BCELoss()
-        self.deconv1 = nn.ConvTranspose2d(100, 8 * model_complexity, 4, 1, 0)
+        self.deconv1 = nn.ConvTranspose2d(G_inputs, 8 * model_complexity, 4, 1, 0)
         self.deconv1_bn = nn.BatchNorm2d(8 * model_complexity)
         self.deconv2 = nn.ConvTranspose2d(8 * model_complexity, 4 * model_complexity, 4, 2, 1)
         self.deconv2_bn = nn.BatchNorm2d(4 * model_complexity)

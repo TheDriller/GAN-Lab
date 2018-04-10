@@ -4,3 +4,7 @@
 *.png
 .DS_Store
 *.pyc
+*.jpeg
+*.jpg
+*.pt
+*.numbers
