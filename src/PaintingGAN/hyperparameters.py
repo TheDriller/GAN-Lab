@@ -1,9 +1,9 @@
 # hyperparameters
-D_STEPS = 1
-G_STEPS = 1
+D_STEPS = 5
+G_STEPS = 2
 NB_EPOCH = 50
-IMAGES_TO_GENERATE = 1
-MODEL_COMPLEXITY = 4
+IMAGES_TO_GENERATE = 5
+MODEL_COMPLEXITY = 1
 
 LATENT_DIMENSION = 100
 G_INPUTS = LATENT_DIMENSION
@@ -36,6 +36,11 @@ CAN_USE_PLT = 1
 DATASET = "impressionism"
 
 SAVE = True
-
 packing = 4
 
+SAVE_PATH = "results/"
+
+LOAD_MODELS = True
+
+D_LOAD_NAME = "epoch2_D_model.pt"
+G_LOAD_NAME = "epoch2_G_model.pt"
