@@ -86,7 +86,7 @@ class Trainer():
                     y_almost_zeros = y_almost_zeros.cuda()
 
                 temp_loss = []
-                x = self.pack(x.data)
+                x = self.pack(x)
                 if self.cuda:
                     x = x.cuda()
 
@@ -106,7 +106,7 @@ class Trainer():
 
                     # Train on generated data
                     generated_batch = self.G(z)
-                    generated_batch = self.pack(generated_batch.data)
+                    generated_batch = self.pack(generated_batch)
                     if self.cuda:
                         generated_batch = generated_batch.cuda()
                     generated_prediction = self.D(generated_batch).squeeze() # 1x1
@@ -138,7 +138,7 @@ class Trainer():
                         z = z.cuda()
 
                     generated_batch = self.G(z)
-                    generated_batch = self.pack(generated_batch.data)
+                    generated_batch = self.pack(generated_batch)
                     if self.cuda:
                         generated_batch = generated_batch.cuda()
 
@@ -221,16 +221,10 @@ class Trainer():
 
     # inspired from https://arxiv.org/pdf/1712.04086.pdf
     def pack(self, x):
-        packed = torch.zeros(int((x.size(0) - 1) / packing) + 1, packing * NB_CHANNELS, x.size(2), x.size(3))
+        if x.size(0) % 2 == 1:
+            x = x.repeat(packing, 1, 1, 1)
 
-        for i in range(0, packed.size(0)):
-            for j in range(0, packing):
-                if(i * packing + j < packed.size(0)):
-                    packed[i,j,:,:] = x[i * packing + j, 0]
-                else:
-                    packed[i,j,:,:] = x[i * packing, 0]
-
-        return Variable(packed)
+        return x.view(int((x.size(0) - 1) / packing) + 1, NB_CHANNELS * packing, IMAGE_X, IMAGE_Y)
 
 
 def main():

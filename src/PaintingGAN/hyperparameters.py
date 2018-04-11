@@ -1,9 +1,9 @@
 # hyperparameters
-D_STEPS = 10
-G_STEPS = 5
+D_STEPS = 1
+G_STEPS = 1
 NB_EPOCH = 50
-IMAGES_TO_GENERATE = 5
-MODEL_COMPLEXITY = 64
+IMAGES_TO_GENERATE = 1
+MODEL_COMPLEXITY = 4
 
 LATENT_DIMENSION = 100
 G_INPUTS = LATENT_DIMENSION
@@ -21,7 +21,7 @@ BETA2 = 0.999
 MEAN = 0.0
 STD = 0.02
 
-COLOR = 1
+COLOR = 0
 
 if COLOR:
     NB_CHANNELS = 3
@@ -33,9 +33,9 @@ save = True
 
 CAN_USE_PLT = 1
 
-DATASET = "abstract"
+DATASET = "impressionism"
 
 SAVE = True
 
-packing = 3
+packing = 4
 
