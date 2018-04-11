@@ -146,6 +146,7 @@ class Trainer():
 
             self.write_image(e)
             self.create_plots()
+            self.save_models()
 
     def write_image(self, e):
         # Write generated image

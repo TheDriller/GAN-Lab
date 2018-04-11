@@ -3,7 +3,7 @@ D_steps = 1
 G_steps = 1
 nb_epoch = 100
 
-model_complexity = 128
+model_complexity = 64
 
 G_inputs = 100
 
