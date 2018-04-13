@@ -7,7 +7,10 @@ import cv2
 import sys
 
 # Size of the new images
-resized_size = 128
+resized_size = 64
+
+# Color or greyscale
+color = True
 
 # Number of images to extract
 nb_max_images = 100000
@@ -53,10 +56,11 @@ for dir in os.listdir(original_dataset_dir):
                 image_resized = resizeimage.resize_cover(image, [resized_size, resized_size])
                 image_resized.save(dataset_dir + file, image.format)
 
-                # Greyscale
-                image = cv2.imread(dataset_dir + file)
-                image_greyscaled = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-                cv2.imwrite(dataset_dir + file, image_greyscaled)
+                if not color:
+                    # Greyscale
+                    image = cv2.imread(dataset_dir + file)
+                    image_greyscaled = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                    cv2.imwrite(dataset_dir + file, image_greyscaled)
 
                 if index >= nb_max_images:
                     break
