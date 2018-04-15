@@ -61,7 +61,6 @@ class Trainer():
 
         self.D_optimiser = optim.Adam(self.D.parameters(), lr = LR, betas = (BETA1, BETA2))
         self.G_optimiser = optim.Adam(self.G.parameters(), lr = LR, betas = (BETA1, BETA2))
-        self.predictions = []
 
 
     def train_generator(self,batch):
@@ -95,8 +94,10 @@ class Trainer():
 
             loss_G.backward()
 
-            predictions.append(generated_prediction.mean())
+            predictions.append(generated_prediction.mean().data[0])
             last_g_loss = loss_G.data[0]
+            g_loss.append(last_g_loss)
+
             losses.append(last_g_loss)
             if last_g_loss < 0.7 * last_d_loss:
                 self.G_optimiser.step()
@@ -133,6 +134,9 @@ class Trainer():
 
             losses.append(loss_d_r.data + loss_d_f.data)
             last_d_loss = (loss_d_r + loss_d_f).data[0]
+
+            d_loss.append(last_d_loss)
+
             if last_d_loss > 0.7 * last_g_loss:
                 self.D_optimiser.step()
         return losses
