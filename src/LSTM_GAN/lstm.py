@@ -119,7 +119,7 @@ class Trainer():
             z = Variable(self.create_noise_batch(current_batch_size)).view(current_batch_size, 1, -1)
             if cuda:
                 z = z.cuda()
-            
+
             generated_batch = Variable(self.G.forward_G(current_batch_size, z))
 
             if cuda:
@@ -201,7 +201,7 @@ class Trainer():
             opt = 'w' # make a new file if not
 
         with open(dir_saved + "D_loss.log", opt) as log:
-            log.write(str(d_loss) + "\n")
+            log.write(str(d_loss[-1]) + "\n")
 
         if os.path.exists(dir_saved + G_log):
             opt = 'a' # append if already exists
@@ -209,7 +209,7 @@ class Trainer():
             opt = 'w' # make a new file if not
 
         with open(dir_saved + "G_loss.log", opt) as log:
-            log.write(str(g_loss) + "\n")
+            log.write(str(g_loss[-1]) + "\n")
 
 if __name__ == '__main__':
     T = Trainer()
