@@ -71,6 +71,7 @@ class Trainer():
         # train generator for G_Steps
         for k in range(0, G_STEPS):
             print("Training generator - k = "+str(k))
+            self.G.zero_grad()
 
             z = Variable(self.create_noise_batch(current_batch_size)).view(current_batch_size, 1, -1)
             if cuda:
@@ -82,7 +83,9 @@ class Trainer():
                 generated_batch = generated_batch.cuda()
 
             # lstm input is (seq_index, batch_index, (network)input_index)
-            generated_prediction = self.D.forward_D(generated_batch.view(int(generated_batch.size(1) / SONG_PIECE_SIZE), generated_batch.size(0), -1), USE_FEATURE_MATCHING)
+            generated_batch = generated_batch.view(int(generated_batch.size(1) / SONG_PIECE_SIZE), generated_batch.size(0), -1)
+
+            generated_prediction = self.D.forward_D(generated_batch, USE_FEATURE_MATCHING)
 
             if USE_FEATURE_MATCHING:
                 feature_real = self.D.forward_D(batch.detach(), USE_FEATURE_MATCHING)
@@ -116,7 +119,7 @@ class Trainer():
             z = Variable(self.create_noise_batch(current_batch_size)).view(current_batch_size, 1, -1)
             if cuda:
                 z = z.cuda()
-
+            
             generated_batch = Variable(self.G.forward_G(current_batch_size, z))
 
             if cuda:

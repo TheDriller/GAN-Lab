@@ -2,7 +2,7 @@ import torch
 
 # hyperparameters
 D_STEPS = 5
-TOT_EPOCHS = 20
+TOT_EPOCHS = 5
 G_STEPS = 5
 SONG_LENGTH = 110224 # 2^4 * 83^2
 MINIBATCH_SIZE = 32
@@ -10,8 +10,8 @@ MINIBATCH_SIZE = 32
 LR = 0.0002
 BETA1 = 0.5
 BETA2 = 0.999
-HIDDEN_SIZE = 100
-LATENT_DIMENSION = 100 # ???
+HIDDEN_SIZE = 10
+LATENT_DIMENSION = 10 # ???
 SONG_PIECE_SIZE = 83 * 4
 SAVE = 1
 cuda = torch.cuda.is_available()
