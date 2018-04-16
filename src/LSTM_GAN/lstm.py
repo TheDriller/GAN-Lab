@@ -164,12 +164,16 @@ class Trainer():
 
                 # Train discriminator
                 discriminator_losses = self.train_discriminator(batch)
-                d_loss.append(np.mean(discriminator_losses))
+                d_loss_t = np.mean(discriminator_losses)
+                d_loss.append(d_loss_t)
 
                 # Train generator
                 generator_losses = self.train_generator(batch)
 
-                g_loss.append(np.mean(generator_losses))
+                g_loss_t = np.mean(generator_losses)
+                g_loss.append(g_loss_t)
+
+                self.write_log(d_loss, g_loss)
 
             self.write_epoch_song(z_saved, i)
 
@@ -183,6 +187,29 @@ class Trainer():
         generated_songs = self.G.forward_G(z.size(0), z)
         for i in range(0, generated_songs.size(0)):
             np.save(dir_saved + "saved_song" + str(epoch) + str(i) + ".npy", generated_songs[i])
+
+    def write_log(self, d_loss, g_loss):
+        dir_saved = "data/log/"
+        os.makedirs(dir_saved, exist_ok = True)
+
+        D_log = "D_loss.log"
+        G_log = "G_loss.log"
+
+        if os.path.exists(dir_saved + D_log):
+            opt = 'a' # append if already exists
+        else:
+            opt = 'w' # make a new file if not
+
+        with open(dir_saved + "D_loss.log", opt) as log:
+            log.write(str(d_loss) + "\n")
+
+        if os.path.exists(dir_saved + G_log):
+            opt = 'a' # append if already exists
+        else:
+            opt = 'w' # make a new file if not
+
+        with open(dir_saved + "G_loss.log", opt) as log:
+            log.write(str(g_loss) + "\n")
 
 if __name__ == '__main__':
     T = Trainer()
