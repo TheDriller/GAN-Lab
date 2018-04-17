@@ -50,6 +50,28 @@ def get_targets(length):
 
 #Training
 class Trainer():
+
+    def save_model(self, state, modelname):
+        # Save trained model to disk with epoch/optimizer/model state
+        path =  "epoch" + str(state["epoch"]) + "_" + modelname + ".pt"
+        if(LOAD_MODELS) :
+            path = "start_epoch" + str(self.start_epoch) + "_" + path
+
+        torch.save(state, SAVE_PATH + path)
+
+    def save_models(self, epoch):
+        self.save_model({
+        'epoch': epoch + 1,
+        'state_dict': self.D.state_dict(),
+        'optimizer' : self.D_optimiser.state_dict()
+        }, "D_model")
+
+        self.save_model({
+        'epoch': epoch + 1,
+        'state_dict': self.G.state_dict(),
+        'optimizer' : self.G_optimiser.state_dict()
+        }, "G_model")
+
     def __init__(self):
         # D and G with their optimiser
         self.D = LSTM_discriminator(HIDDEN_SIZE)
@@ -61,6 +83,23 @@ class Trainer():
 
         self.D_optimiser = optim.Adam(self.D.parameters(), lr = LR, betas = (BETA1, BETA2))
         self.G_optimiser = optim.Adam(self.G.parameters(), lr = LR, betas = (BETA1, BETA2))
+
+        if LOAD_MODELS :
+            G_MODEL_PATH = SAVE_PATH + G_LOAD_NAME
+            D_MODEL_PATH = SAVE_PATH + D_LOAD_NAME
+
+            D_checkpoint = torch.load(D_MODEL_PATH)
+            self.D.load_state_dict(D_checkpoint['state_dict'])
+            self.D_optimiser.load_state_dict(D_checkpoint['optimizer'])
+
+            G_checkpoint = torch.load(G_MODEL_PATH)
+            self.G.load_state_dict(G_checkpoint['state_dict'])
+            self.G_optimiser.load_state_dict(G_checkpoint['optimizer'])
+
+            self.start_epoch = G_checkpoint["epoch"]
+            print("Models are pretrained starting from epoch ", self.start_epoch)
+            print("D loaded from : " + D_MODEL_PATH)
+            print("G loaded from : " + G_MODEL_PATH)
 
 
     def train_generator(self,batch):
@@ -175,7 +214,15 @@ class Trainer():
 
                 self.write_log(d_loss, g_loss)
 
+            # Save models on checkpoint
+            if i % CHECKPOINT == 0:
+                self.save_models(i)
+
+
             self.write_epoch_song(z_saved, i)
+
+        if (TOT_EPOCHS-1) % CHECKPOINT != 0 :
+            self.save_models(TOT_EPOCHS)
 
     def create_noise_batch(self, batch_size):
         G_in = np.random.normal(0.0, 1.0, [batch_size, LATENT_DIMENSION])

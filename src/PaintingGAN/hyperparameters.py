@@ -36,6 +36,7 @@ CAN_USE_PLT = 1
 DATASET = "impressionism"
 
 SAVE = True
+CHECKPOINT = 3
 packing = 4
 
 SAVE_PATH = "results/"

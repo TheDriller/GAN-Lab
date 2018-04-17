@@ -83,7 +83,7 @@ class Trainer():
 
             # Start loop for each minibatch
             for batch_idx, (x, target) in enumerate(self.train_loader):
-                
+
                 current_batch_size = x.shape[0]
 
                 # Remove useless channels
@@ -187,8 +187,12 @@ class Trainer():
             self.write_image(e)
             if (CAN_USE_PLT):
                 self.create_plots()
-                #SAVE MODELS :
-            self.save_models(e)
+            #SAVE MODELS :
+            if e % CHECKPOINT == 0:
+                self.save_models(e)
+
+        if (NB_EPOCH-1) % CHECKPOINT != 0 :
+            self.save_models(NB_EPOCH)
 
 
     def save_model(self, state, modelname):
@@ -289,4 +293,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

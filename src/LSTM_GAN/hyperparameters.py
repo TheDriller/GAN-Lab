@@ -20,3 +20,13 @@ LSTM_LAYERS = 1
 USE_ZEROS = False
 USE_FEATURE_MATCHING = True
 FM_DIV = 2
+
+SAVE = True
+CHECKPOINT = 3
+
+SAVE_PATH = "results/"
+
+LOAD_MODELS = True
+
+D_LOAD_NAME = "epoch6_D_model.pt"
+G_LOAD_NAME = "epoch6_G_model.pt"
