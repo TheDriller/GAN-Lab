@@ -21,6 +21,9 @@ USE_ZEROS = False
 USE_FEATURE_MATCHING = True
 FM_DIV = 2
 
+MULTI_GPU = False
+GPU_NB = 1
+
 SAVE = True
 CHECKPOINT = 3
 

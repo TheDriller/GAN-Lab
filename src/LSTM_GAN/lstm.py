@@ -76,9 +76,13 @@ class Trainer():
         # D and G with their optimiser
         self.D = LSTM_discriminator(HIDDEN_SIZE)
         if cuda:
+            if MULTI_GPU:
+                self.D.net = torch.nn.DataParallel(self.D.net)
             self.D.cuda()
         self.G = LSTM_generator(HIDDEN_SIZE, SONG_PIECE_SIZE)
         if cuda:
+            if MULTI_GPU:
+                self.G.net = torch.nn.DataParallel(self.G.net)
             self.G.cuda()
 
         self.D_optimiser = optim.Adam(self.D.parameters(), lr = LR, betas = (BETA1, BETA2))
