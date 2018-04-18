@@ -13,7 +13,6 @@ BETA2 = 0.999
 HIDDEN_SIZE = 10
 LATENT_DIMENSION = 10 # ???
 SONG_PIECE_SIZE = 83 * 4
-SAVE = 1
 cuda = torch.cuda.is_available()
 DROPOUT_PROB = 0.4
 LSTM_LAYERS = 1
@@ -24,7 +23,6 @@ FM_DIV = 2
 MULTI_GPU = False
 GPU_NB = 1
 
-SAVE = True
 CHECKPOINT = 3
 
 SAVE_PATH = "results/"

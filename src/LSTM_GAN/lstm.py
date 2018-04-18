@@ -271,14 +271,3 @@ if __name__ == '__main__':
     torch.save(T.D.state_dict(), "d_saved.pt")
 
     print("done")
-
-    if SAVE:
-        plt.plot(predictions, label="test")
-        plt.savefig("predictions.png")
-        plt.show()
-
-        plt.plot(d_loss, label="d_loss")
-        plt.plot(g_loss, label="g_loss")
-        plt.legend(loc="best")
-        plt.savefig("loss.png")
-        plt.show()
