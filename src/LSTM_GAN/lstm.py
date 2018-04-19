@@ -247,17 +247,17 @@ class Trainer():
         G_log = "G_loss.log"
 
         if os.path.exists(dir_saved + D_log):
-            opt = 'a' # append if already exists
+            opt = 'a'
         else:
-            opt = 'w' # make a new file if not
+            opt = 'w'
 
         with open(dir_saved + "D_loss.log", opt) as log:
             log.write(str(d_loss[-1]) + "\n")
 
         if os.path.exists(dir_saved + G_log):
-            opt = 'a' # append if already exists
+            opt = 'a'
         else:
-            opt = 'w' # make a new file if not
+            opt = 'w'
 
         with open(dir_saved + "G_loss.log", opt) as log:
             log.write(str(g_loss[-1]) + "\n")
